@@ -229,7 +229,7 @@ export default function Portfolio() {
       ? portfolioItems
       : portfolioItems.filter((item) => item.category === activeFilter);
 
-  // Create scroll reveal hooks for each portfolio card (fixed number)
+  // Create scroll reveal hooks for each portfolio card (fixed number to cover all items)
   const portfolioRef1 = useScrollReveal(0.1);
   const portfolioRef2 = useScrollReveal(0.1);
   const portfolioRef3 = useScrollReveal(0.1);
@@ -274,7 +274,9 @@ export default function Portfolio() {
             const originalIndex = portfolioItems.findIndex(
               (originalItem) => originalItem.id === item.id
             );
-            const { ref, isInView } = portfolioRefs[originalIndex];
+            // Use a fallback ref if the original index is not found
+            const { ref, isInView } =
+              portfolioRefs[originalIndex] || portfolioRefs[0];
 
             return (
               <div
