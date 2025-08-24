@@ -233,8 +233,8 @@ export default function Portfolio() {
       ? portfolioItems
       : portfolioItems.filter((item) => item.category === activeFilter);
 
-  // Create scroll reveal hooks for each portfolio card
-  const portfolioRefs = filteredItems.map(() => useScrollReveal(0.1));
+  // Create scroll reveal hooks for each portfolio card (fixed number based on portfolioItems length)
+  const portfolioRefs = portfolioItems.map(() => useScrollReveal(0.1));
 
   return (
     <section
@@ -276,8 +276,12 @@ export default function Portfolio() {
 
         {/* Portfolio Grid with 3D Effects and Live Demos */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {filteredItems.map((item, index) => {
-            const { ref, isInView } = portfolioRefs[index];
+          {filteredItems.map((item, filteredIndex) => {
+            // Find the original index in portfolioItems to get the correct ref
+            const originalIndex = portfolioItems.findIndex(
+              (originalItem) => originalItem.id === item.id
+            );
+            const { ref, isInView } = portfolioRefs[originalIndex];
 
             return (
               <div
@@ -290,7 +294,7 @@ export default function Portfolio() {
                 } ${
                   expandedCard === item.id ? "col-span-full row-span-2" : ""
                 }`}
-                style={{ transitionDelay: `${index * 150}ms` }}
+                style={{ transitionDelay: `${filteredIndex * 150}ms` }}
               >
                 {/* 3D Flip Container */}
                 <div

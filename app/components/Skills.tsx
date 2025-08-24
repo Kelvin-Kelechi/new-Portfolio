@@ -3,11 +3,7 @@ import { useEffect, useState } from "react";
 import { useScrollReveal } from "../hooks/useScrollReveal";
 
 export default function Skills() {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
+  // Removed unused isVisible state since we're using scroll reveal now
 
   const skillsData = [
     {
