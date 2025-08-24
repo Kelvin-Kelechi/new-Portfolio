@@ -2,15 +2,23 @@
 import { useEffect, useState } from "react";
 
 // Typewriter component
-function TypewriterText({ text, speed = 100, className = "" }: { text: string; speed?: number; className?: string }) {
+function TypewriterText({
+  text,
+  speed = 100,
+  className = "",
+}: {
+  text: string;
+  speed?: number;
+  className?: string;
+}) {
   const [displayText, setDisplayText] = useState("");
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     if (currentIndex < text.length) {
       const timer = setTimeout(() => {
-        setDisplayText(prev => prev + text[currentIndex]);
-        setCurrentIndex(prev => prev + 1);
+        setDisplayText((prev) => prev + text[currentIndex]);
+        setCurrentIndex((prev) => prev + 1);
       }, speed);
       return () => clearTimeout(timer);
     }

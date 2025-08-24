@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useScrollReveal } from "../hooks/useScrollReveal";
 
 export default function Portfolio() {
   const [isVisible, setIsVisible] = useState(false);
@@ -232,6 +233,9 @@ export default function Portfolio() {
       ? portfolioItems
       : portfolioItems.filter((item) => item.category === activeFilter);
 
+  // Create scroll reveal hooks for each portfolio card
+  const portfolioRefs = filteredItems.map(() => useScrollReveal(0.1));
+
   return (
     <section
       id="portfolio"
@@ -272,188 +276,197 @@ export default function Portfolio() {
 
         {/* Portfolio Grid with 3D Effects and Live Demos */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {filteredItems.map((item, index) => (
-            <div
-              key={item.id}
-              className={`group relative bg-white/5 backdrop-blur-sm rounded-2xl border border-gray-700/50 transition-all duration-700 ease-out transform hover:scale-105 hover:rotate-y-3 hover:shadow-2xl hover:shadow-blue-500/20 hover:border-gray-600/50 ${
-                isVisible
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-12"
-              } ${expandedCard === item.id ? "col-span-full row-span-2" : ""}`}
-              style={{ transitionDelay: `${index * 150}ms` }}
-            >
-              {/* 3D Flip Container */}
+          {filteredItems.map((item, index) => {
+            const { ref, isInView } = portfolioRefs[index];
+
+            return (
               <div
-                className={`relative w-full h-full transition-transform duration-700 transform-style-preserve-3d ${
-                  flippedCards.has(item.id) ? "rotate-y-180" : ""
+                key={item.id}
+                ref={ref}
+                className={`group relative bg-white/5 backdrop-blur-sm rounded-2xl border border-gray-700/50 transition-all duration-700 ease-out transform hover:scale-105 hover:rotate-y-3 hover:shadow-2xl hover:shadow-blue-500/20 hover:border-gray-600/50 ${
+                  isInView
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-12"
+                } ${
+                  expandedCard === item.id ? "col-span-full row-span-2" : ""
                 }`}
+                style={{ transitionDelay: `${index * 150}ms` }}
               >
-                {/* Front Side */}
+                {/* 3D Flip Container */}
                 <div
-                  className={`w-full h-full p-6 sm:p-8 backface-hidden ${
-                    flippedCards.has(item.id) ? "opacity-0" : "opacity-100"
+                  className={`relative w-full h-full transition-transform duration-700 transform-style-preserve-3d ${
+                    flippedCards.has(item.id) ? "rotate-y-180" : ""
                   }`}
                 >
-                  {/* Icon Container with Zoom Effect */}
-                  <div className="text-center text-white mb-4">
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-lg mx-auto mb-2 flex items-center justify-center transition-transform duration-500 ease-out group-hover:scale-125 group-hover:rotate-12">
-                      {item.icon}
+                  {/* Front Side */}
+                  <div
+                    className={`w-full h-full p-6 sm:p-8 backface-hidden ${
+                      flippedCards.has(item.id) ? "opacity-0" : "opacity-100"
+                    }`}
+                  >
+                    {/* Icon Container with Zoom Effect */}
+                    <div className="text-center text-white mb-4">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-lg mx-auto mb-2 flex items-center justify-center transition-transform duration-500 ease-out group-hover:scale-125 group-hover:rotate-12">
+                        {item.icon}
+                      </div>
+                      <p className="text-xs sm:text-sm">{item.category}</p>
                     </div>
-                    <p className="text-xs sm:text-sm">{item.category}</p>
-                  </div>
 
-                  {/* Live Demo Mockup */}
-                  <div className="mb-4 transform hover:scale-105 transition-transform duration-300">
-                    {item.mockup}
-                  </div>
+                    {/* Live Demo Mockup */}
+                    <div className="mb-4 transform hover:scale-105 transition-transform duration-300">
+                      {item.mockup}
+                    </div>
 
-                  {/* Content with Hover Effects */}
-                  <h3 className="text-base sm:text-lg font-semibold text-white mb-2 group-hover:text-blue-400 transition-colors duration-300">
-                    {item.title}
-                  </h3>
-                  <p className="text-gray-400 text-xs sm:text-sm group-hover:text-gray-300 transition-colors duration-300">
-                    {item.description}
-                  </p>
-
-                  {/* Interactive Buttons */}
-                  <div className="flex space-x-2 mt-4">
-                    <button
-                      onClick={() => toggleCardFlip(item.id)}
-                      className="px-3 py-1 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 text-xs rounded transition-all duration-300 hover:scale-105"
-                    >
-                      {flippedCards.has(item.id) ? "Show Demo" : "View Details"}
-                    </button>
-                    <button
-                      onClick={() => toggleCardExpand(item.id)}
-                      className="px-3 py-1 bg-purple-600/20 hover:bg-purple-600/40 text-purple-400 text-xs rounded transition-all duration-300 hover:scale-105"
-                    >
-                      {expandedCard === item.id ? "Collapse" : "Expand"}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Back Side (Flipped) */}
-                <div
-                  className={`absolute inset-0 w-full h-full p-6 sm:p-8 backface-hidden rotate-y-180 ${
-                    flippedCards.has(item.id) ? "opacity-100" : "opacity-0"
-                  }`}
-                >
-                  <div className="text-center text-white">
-                    <h4 className="text-lg font-semibold mb-4">
-                      {item.title} - Details
-                    </h4>
-                    <p className="text-gray-300 text-sm mb-4">
-                      {item.longDescription}
+                    {/* Content with Hover Effects */}
+                    <h3 className="text-base sm:text-lg font-semibold text-white mb-2 group-hover:text-blue-400 transition-colors duration-300">
+                      {item.title}
+                    </h3>
+                    <p className="text-gray-400 text-xs sm:text-sm group-hover:text-gray-300 transition-colors duration-300">
+                      {item.description}
                     </p>
 
-                    {/* Technologies */}
-                    <div className="flex flex-wrap justify-center gap-2 mb-4">
-                      {item.technologies.map((tech, techIndex) => (
-                        <span
-                          key={techIndex}
-                          className="px-2 py-1 bg-blue-600/20 text-blue-400 text-xs rounded"
-                        >
-                          {tech}
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* Demo Button */}
-                    <a
-                      href={item.demoUrl}
-                      className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-all duration-300 hover:scale-105"
-                    >
-                      Live Demo
-                    </a>
-                  </div>
-                </div>
-              </div>
-
-              {/* Expanded Content Overlay */}
-              {expandedCard === item.id && (
-                <div className="absolute inset-0 bg-gray-900/95 backdrop-blur-sm rounded-2xl p-6 sm:p-8 z-10 animate-in slide-in-from-bottom-4 duration-500">
-                  <div className="h-full flex flex-col">
-                    <div className="flex justify-between items-start mb-4">
-                      <h3 className="text-xl font-semibold text-white">
-                        {item.title}
-                      </h3>
+                    {/* Interactive Buttons */}
+                    <div className="flex space-x-2 mt-4">
+                      <button
+                        onClick={() => toggleCardFlip(item.id)}
+                        className="px-3 py-1 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 text-xs rounded transition-all duration-300 hover:scale-105"
+                      >
+                        {flippedCards.has(item.id)
+                          ? "Show Demo"
+                          : "View Details"}
+                      </button>
                       <button
                         onClick={() => toggleCardExpand(item.id)}
-                        className="text-gray-400 hover:text-white transition-colors"
+                        className="px-3 py-1 bg-purple-600/20 hover:bg-purple-600/40 text-purple-400 text-xs rounded transition-all duration-300 hover:scale-105"
                       >
-                        <svg
-                          className="w-6 h-6"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
+                        {expandedCard === item.id ? "Collapse" : "Expand"}
                       </button>
                     </div>
+                  </div>
 
-                    <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6">
-                      {/* Enhanced Mockup */}
-                      <div className="transform hover:scale-105 transition-transform duration-300">
-                        {item.mockup}
+                  {/* Back Side (Flipped) */}
+                  <div
+                    className={`absolute inset-0 w-full h-full p-6 sm:p-8 backface-hidden rotate-y-180 ${
+                      flippedCards.has(item.id) ? "opacity-100" : "opacity-0"
+                    }`}
+                  >
+                    <div className="text-center text-white">
+                      <h4 className="text-lg font-semibold mb-4">
+                        {item.title} - Details
+                      </h4>
+                      <p className="text-gray-300 text-sm mb-4">
+                        {item.longDescription}
+                      </p>
+
+                      {/* Technologies */}
+                      <div className="flex flex-wrap justify-center gap-2 mb-4">
+                        {item.technologies.map((tech, techIndex) => (
+                          <span
+                            key={techIndex}
+                            className="px-2 py-1 bg-blue-600/20 text-blue-400 text-xs rounded"
+                          >
+                            {tech}
+                          </span>
+                        ))}
                       </div>
 
-                      {/* Project Details */}
-                      <div className="space-y-4">
-                        <div>
-                          <h4 className="text-lg font-semibold text-white mb-2">
-                            Description
-                          </h4>
-                          <p className="text-gray-300 text-sm leading-relaxed">
-                            {item.longDescription}
-                          </p>
+                      {/* Demo Button */}
+                      <a
+                        href={item.demoUrl}
+                        className="inline-block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-all duration-300 hover:scale-105"
+                      >
+                        Live Demo
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Expanded Content Overlay */}
+                {expandedCard === item.id && (
+                  <div className="absolute inset-0 bg-gray-900/95 backdrop-blur-sm rounded-2xl p-6 sm:p-8 z-10 animate-in slide-in-from-bottom-4 duration-500">
+                    <div className="h-full flex flex-col">
+                      <div className="flex justify-between items-start mb-4">
+                        <h3 className="text-xl font-semibold text-white">
+                          {item.title}
+                        </h3>
+                        <button
+                          onClick={() => toggleCardExpand(item.id)}
+                          className="text-gray-400 hover:text-white transition-colors"
+                        >
+                          <svg
+                            className="w-6 h-6"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+
+                      <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Enhanced Mockup */}
+                        <div className="transform hover:scale-105 transition-transform duration-300">
+                          {item.mockup}
                         </div>
 
-                        <div>
-                          <h4 className="text-lg font-semibold text-white mb-2">
-                            Technologies
-                          </h4>
-                          <div className="flex flex-wrap gap-2">
-                            {item.technologies.map((tech, techIndex) => (
-                              <span
-                                key={techIndex}
-                                className="px-3 py-1 bg-blue-600/20 text-blue-400 text-sm rounded-full"
-                              >
-                                {tech}
-                              </span>
-                            ))}
+                        {/* Project Details */}
+                        <div className="space-y-4">
+                          <div>
+                            <h4 className="text-lg font-semibold text-white mb-2">
+                              Description
+                            </h4>
+                            <p className="text-gray-300 text-sm leading-relaxed">
+                              {item.longDescription}
+                            </p>
                           </div>
-                        </div>
 
-                        <div className="flex space-x-3">
-                          <a
-                            href={item.demoUrl}
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-all duration-300 hover:scale-105"
-                          >
-                            Live Demo
-                          </a>
-                          <button
-                            onClick={() => toggleCardFlip(item.id)}
-                            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded transition-all duration-300 hover:scale-105"
-                          >
-                            View Details
-                          </button>
+                          <div>
+                            <h4 className="text-lg font-semibold text-white mb-2">
+                              Technologies
+                            </h4>
+                            <div className="flex flex-wrap gap-2">
+                              {item.technologies.map((tech, techIndex) => (
+                                <span
+                                  key={techIndex}
+                                  className="px-3 py-1 bg-blue-600/20 text-blue-400 text-sm rounded-full"
+                                >
+                                  {tech}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="flex space-x-3">
+                            <a
+                              href={item.demoUrl}
+                              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded transition-all duration-300 hover:scale-105"
+                            >
+                              Live Demo
+                            </a>
+                            <button
+                              onClick={() => toggleCardFlip(item.id)}
+                              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-sm rounded transition-all duration-300 hover:scale-105"
+                            >
+                              View Details
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Hover Overlay Effect */}
-              <div className="absolute inset-0 bg-gradient-to-t from-blue-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 ease-out rounded-2xl pointer-events-none"></div>
-            </div>
-          ))}
+                {/* Hover Overlay Effect */}
+                <div className="absolute inset-0 bg-gradient-to-t from-blue-600/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 ease-out rounded-2xl pointer-events-none"></div>
+              </div>
+            );
+          })}
         </div>
 
         {/* Navigation Arrows with Hover Effects */}

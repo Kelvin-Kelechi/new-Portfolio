@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useScrollReveal } from "../hooks/useScrollReveal";
 
 export default function Services() {
   const [isVisible, setIsVisible] = useState(false);
@@ -79,6 +80,9 @@ export default function Services() {
     },
   ];
 
+  // Create scroll reveal hooks for each service card
+  const serviceRefs = services.map(() => useScrollReveal(0.1));
+
   return (
     <section id="services" className="py-12 sm:py-16 px-4 sm:px-6">
       <div className="container mx-auto">
@@ -91,46 +95,51 @@ export default function Services() {
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 max-w-7xl mx-auto">
-          {services.map((service, index) => (
-            <div
-              key={service.id}
-              className={`group bg-white/5 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-gray-700/50 transition-all duration-700 ease-out transform hover:scale-105 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/20 hover:border-gray-600/50 ${
-                isVisible
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-12"
-              }`}
-              style={{ transitionDelay: `${service.animationDelay}ms` }}
-            >
-              {/* Icon Container with Animations */}
+          {services.map((service, index) => {
+            const { ref, isInView } = serviceRefs[index];
+
+            return (
               <div
-                className={`w-14 h-14 sm:w-16 sm:h-16 ${service.iconBg} rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 transition-all duration-500 ease-out group-hover:scale-110 group-hover:rotate-12 group-hover:animate-bounce`}
+                key={service.id}
+                ref={ref}
+                className={`group bg-white/5 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-gray-700/50 transition-all duration-700 ease-out transform hover:scale-105 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/20 hover:border-gray-600/50 ${
+                  isInView
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-12"
+                }`}
+                style={{ transitionDelay: `${service.animationDelay}ms` }}
               >
-                {service.icon}
+                {/* Icon Container with Animations */}
+                <div
+                  className={`w-14 h-14 sm:w-16 sm:h-16 ${service.iconBg} rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 transition-all duration-500 ease-out group-hover:scale-110 group-hover:rotate-12 group-hover:animate-bounce`}
+                >
+                  {service.icon}
+                </div>
+
+                {/* Content with Hover Effects */}
+                <h3 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4 text-center group-hover:text-blue-400 transition-colors duration-300">
+                  {service.title}
+                </h3>
+
+                <p className="text-gray-300 leading-relaxed text-sm sm:text-base text-center group-hover:text-gray-200 transition-colors duration-300">
+                  {service.description}
+                </p>
+
+                {/* Hover Overlay Effect */}
+                <div className="absolute inset-0 bg-gradient-to-t from-blue-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 ease-out rounded-2xl pointer-events-none"></div>
+
+                {/* Floating Elements on Hover */}
+                <div
+                  className="absolute top-2 right-2 w-2 h-2 bg-blue-400 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-ping transition-all duration-500 ease-out"
+                  style={{ animationDelay: "200ms" }}
+                ></div>
+                <div
+                  className="absolute bottom-2 left-2 w-1 h-1 bg-purple-400 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-ping transition-all duration-500 ease-out"
+                  style={{ animationDelay: "400ms" }}
+                ></div>
               </div>
-
-              {/* Content with Hover Effects */}
-              <h3 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4 text-center group-hover:text-blue-400 transition-colors duration-300">
-                {service.title}
-              </h3>
-
-              <p className="text-gray-300 leading-relaxed text-sm sm:text-base text-center group-hover:text-gray-200 transition-colors duration-300">
-                {service.description}
-              </p>
-
-              {/* Hover Overlay Effect */}
-              <div className="absolute inset-0 bg-gradient-to-t from-blue-600/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 ease-out rounded-2xl pointer-events-none"></div>
-
-              {/* Floating Elements on Hover */}
-              <div
-                className="absolute top-2 right-2 w-2 h-2 bg-blue-400 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-ping transition-all duration-500 ease-out"
-                style={{ animationDelay: "200ms" }}
-              ></div>
-              <div
-                className="absolute bottom-2 left-2 w-1 h-1 bg-purple-400 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-ping transition-all duration-500 ease-out"
-                style={{ animationDelay: "400ms" }}
-              ></div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>

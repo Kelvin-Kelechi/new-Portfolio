@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useScrollReveal } from "../hooks/useScrollReveal";
 
 export default function Skills() {
   const [isVisible, setIsVisible] = useState(false);
@@ -57,67 +58,77 @@ export default function Skills() {
     },
   ];
 
+  // Create scroll reveal hooks for each skill card
+  const skillRefs = skillsData.map(() => useScrollReveal(0.1));
+
   return (
     <section className="py-12 sm:py-16 px-4 sm:px-6 bg-gray-800/50">
       <div className="container mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-          {skillsData.map((skillGroup, index) => (
-            <div
-              key={index}
-              className={`bg-white/5 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-gray-700/50 transition-all duration-700 ease-out transform hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/10 hover:border-gray-600/50 ${
-                isVisible
-                  ? "opacity-100 translate-y-0"
-                  : "opacity-0 translate-y-12"
-              }`}
-              style={{ transitionDelay: `${index * 200}ms` }}
-            >
-              <div className="flex items-center space-x-3 mb-6">
-                <div
-                  className={`w-10 h-10 sm:w-12 sm:h-12 ${skillGroup.iconBg} rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-300 ease-out hover:rotate-12 hover:scale-110`}
-                >
-                  {typeof skillGroup.icon === "string" ? (
-                    <span
-                      className="text-white font-bold text-base sm:text-lg"
-                      dangerouslySetInnerHTML={{ __html: skillGroup.icon }}
-                    />
-                  ) : (
-                    skillGroup.icon
-                  )}
-                </div>
-                <h3 className="text-lg sm:text-xl font-semibold text-white">
-                  {skillGroup.title}
-                </h3>
-              </div>
+          {skillsData.map((skillGroup, index) => {
+            const { ref, isInView } = skillRefs[index];
 
-              <div className="space-y-4">
-                {skillGroup.progressBars.map((progressBar, progressIndex) => (
-                  <div key={progressIndex}>
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="text-gray-300">{progressBar.skill}</span>
-                      <span className="text-white">
-                        {progressBar.percentage}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
-                      <div
-                        className={`${
-                          progressBar.color
-                        } h-2 rounded-full transition-all duration-1000 ease-out transform origin-left ${
-                          isVisible ? "scale-x-100" : "scale-x-0"
-                        }`}
-                        style={{
-                          width: `${progressBar.percentage}%`,
-                          transitionDelay: `${
-                            index * 200 + progressIndex * 100 + 400
-                          }ms`,
-                        }}
-                      ></div>
-                    </div>
+            return (
+              <div
+                key={index}
+                ref={ref}
+                className={`bg-white/5 backdrop-blur-sm rounded-2xl p-6 sm:p-8 border border-gray-700/50 transition-all duration-700 ease-out transform hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/10 hover:border-gray-600/50 ${
+                  isInView
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-12"
+                }`}
+                style={{ transitionDelay: `${index * 200}ms` }}
+              >
+                <div className="flex items-center space-x-3 mb-6">
+                  <div
+                    className={`w-10 h-10 sm:w-12 sm:h-12 ${skillGroup.iconBg} rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-300 ease-out hover:rotate-12 hover:scale-110`}
+                  >
+                    {typeof skillGroup.icon === "string" ? (
+                      <span
+                        className="text-white font-bold text-base sm:text-lg"
+                        dangerouslySetInnerHTML={{ __html: skillGroup.icon }}
+                      />
+                    ) : (
+                      skillGroup.icon
+                    )}
                   </div>
-                ))}
+                  <h3 className="text-lg sm:text-xl font-semibold text-white">
+                    {skillGroup.title}
+                  </h3>
+                </div>
+
+                <div className="space-y-4">
+                  {skillGroup.progressBars.map((progressBar, progressIndex) => (
+                    <div key={progressIndex}>
+                      <div className="flex justify-between text-sm mb-2">
+                        <span className="text-gray-300">
+                          {progressBar.skill}
+                        </span>
+                        <span className="text-white">
+                          {progressBar.percentage}%
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
+                        <div
+                          className={`${
+                            progressBar.color
+                          } h-2 rounded-full transition-all duration-1000 ease-out transform origin-left ${
+                            isInView ? "scale-x-100" : "scale-x-0"
+                          }`}
+                          style={{
+                            width: `${progressBar.percentage}%`,
+                            transitionDelay: `${
+                              index * 200 + progressIndex * 100 + 400
+                            }ms`,
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
