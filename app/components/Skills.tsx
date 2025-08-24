@@ -1,5 +1,4 @@
 "use client";
-import { useEffect, useState } from "react";
 import { useScrollReveal } from "../hooks/useScrollReveal";
 
 export default function Skills() {
@@ -54,8 +53,11 @@ export default function Skills() {
     },
   ];
 
-  // Create scroll reveal hooks for each skill card
-  const skillRefs = skillsData.map(() => useScrollReveal(0.1));
+  // Create scroll reveal hooks for each skill card (fixed number)
+  const skillRef1 = useScrollReveal(0.1);
+  const skillRef2 = useScrollReveal(0.1);
+  const skillRef3 = useScrollReveal(0.1);
+  const skillRefs = [skillRef1, skillRef2, skillRef3];
 
   return (
     <section className="py-12 sm:py-16 px-4 sm:px-6 bg-gray-800/50">

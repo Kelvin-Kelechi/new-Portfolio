@@ -1,16 +1,12 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useScrollReveal } from "../hooks/useScrollReveal";
 
 export default function Portfolio() {
-  const [isVisible, setIsVisible] = useState(false);
+  // Removed unused isVisible state since we're using scroll reveal now
   const [activeFilter, setActiveFilter] = useState("All");
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
   const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
-
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
 
   const toggleCardFlip = (cardId: number) => {
     const newFlipped = new Set(flippedCards);
@@ -233,8 +229,11 @@ export default function Portfolio() {
       ? portfolioItems
       : portfolioItems.filter((item) => item.category === activeFilter);
 
-  // Create scroll reveal hooks for each portfolio card (fixed number based on portfolioItems length)
-  const portfolioRefs = portfolioItems.map(() => useScrollReveal(0.1));
+  // Create scroll reveal hooks for each portfolio card (fixed number)
+  const portfolioRef1 = useScrollReveal(0.1);
+  const portfolioRef2 = useScrollReveal(0.1);
+  const portfolioRef3 = useScrollReveal(0.1);
+  const portfolioRefs = [portfolioRef1, portfolioRef2, portfolioRef3];
 
   return (
     <section
@@ -243,9 +242,7 @@ export default function Portfolio() {
     >
       <div className="container mx-auto">
         <h2
-          className={`text-3xl sm:text-4xl font-bold text-white text-center mb-12 sm:mb-16 transition-all duration-1000 ease-out ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
+          className={`text-3xl sm:text-4xl font-bold text-white text-center mb-12 sm:mb-16 transition-all duration-1000 ease-out opacity-100 translate-y-0`}
         >
           My portfolio
         </h2>
@@ -261,11 +258,7 @@ export default function Portfolio() {
                   activeFilter === filter
                     ? "bg-blue-600 text-white shadow-lg shadow-blue-500/25 scale-105"
                     : "text-gray-300 hover:text-white hover:bg-gray-600/50"
-                } ${
-                  isVisible
-                    ? "opacity-100 translate-y-0"
-                    : "opacity-0 translate-y-4"
-                }`}
+                } opacity-100 translate-y-0`}
                 style={{ transitionDelay: `${index * 100}ms` }}
               >
                 {filter}

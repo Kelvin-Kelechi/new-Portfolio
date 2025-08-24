@@ -1,13 +1,8 @@
 "use client";
-import { useEffect, useState } from "react";
 import { useScrollReveal } from "../hooks/useScrollReveal";
 
 export default function Services() {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    setIsVisible(true);
-  }, []);
+  // Removed unused isVisible state since we're using scroll reveal now
 
   const services = [
     {
@@ -80,16 +75,18 @@ export default function Services() {
     },
   ];
 
-  // Create scroll reveal hooks for each service card
-  const serviceRefs = services.map(() => useScrollReveal(0.1));
+  // Create scroll reveal hooks for each service card (fixed number)
+  const serviceRef1 = useScrollReveal(0.1);
+  const serviceRef2 = useScrollReveal(0.1);
+  const serviceRef3 = useScrollReveal(0.1);
+  const serviceRef4 = useScrollReveal(0.1);
+  const serviceRefs = [serviceRef1, serviceRef2, serviceRef3, serviceRef4];
 
   return (
     <section id="services" className="py-12 sm:py-16 px-4 sm:px-6">
       <div className="container mx-auto">
         <h2
-          className={`text-3xl sm:text-4xl font-bold text-white text-center mb-12 sm:mb-16 transition-all duration-1000 ease-out ${
-            isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-          }`}
+          className={`text-3xl sm:text-4xl font-bold text-white text-center mb-12 sm:mb-16 transition-all duration-1000 ease-out opacity-100 translate-y-0`}
         >
           Services
         </h2>
