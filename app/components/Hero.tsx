@@ -1,6 +1,29 @@
 "use client";
 import { useEffect, useState } from "react";
 
+// Typewriter component
+function TypewriterText({ text, speed = 100, className = "" }: { text: string; speed?: number; className?: string }) {
+  const [displayText, setDisplayText] = useState("");
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (currentIndex < text.length) {
+      const timer = setTimeout(() => {
+        setDisplayText(prev => prev + text[currentIndex]);
+        setCurrentIndex(prev => prev + 1);
+      }, speed);
+      return () => clearTimeout(timer);
+    }
+  }, [currentIndex, text, speed]);
+
+  return (
+    <span className={className}>
+      {displayText}
+      <span className="animate-pulse">|</span>
+    </span>
+  );
+}
+
 export default function Hero() {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -13,7 +36,7 @@ export default function Hero() {
       <div className="container mx-auto">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           <div className="space-y-4 sm:space-y-6 order-2 lg:order-1">
-            {/* Main Title - Fade In */}
+            {/* Main Title - Fade In with Typewriter */}
             <h1
               className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight transition-all duration-1000 ease-out ${
                 isVisible
@@ -21,7 +44,12 @@ export default function Hero() {
                   : "opacity-0 translate-y-8"
               }`}
             >
-              Anyigor Kelvin | Software Engineer
+              Anyigor Kelvin |{" "}
+              <TypewriterText 
+                text="Software Engineer" 
+                speed={150}
+                className="text-blue-400"
+              />
             </h1>
 
             {/* Personal Details - Staggered Animation */}
@@ -34,13 +62,11 @@ export default function Hero() {
                 }`}
                 style={{ transitionDelay: "200ms" }}
               >
-                <span>
-                  Passionate Software Engineer with 5+ years of experience
-                  building scalable web and mobile applications. Skilled in
-                  React, Next.js, Node.js, and modern UI/UX. Always eager to
-                  learn, collaborate, and deliver high-quality solutions. Based
-                  in Tehran, available for freelance and remote work.
-                </span>
+                <TypewriterText
+                  text="Passionate Software Engineer with 5+ years of experience building scalable web and mobile applications. Skilled in React, Next.js, Node.js, and modern UI/UX. Always eager to learn, collaborate, and deliver high-quality solutions. Based in Tehran, available for freelance and remote work."
+                  speed={18}
+                  className="inline"
+                />
               </div>
             </div>
 
@@ -109,7 +135,7 @@ export default function Hero() {
                 style={{ transitionDelay: "1100ms" }}
               >
                 <svg
-                  className="w-6 h-6 sm:w-8 sm:h-8"
+                  className="w-6 h-6 sm:w-8 sm:w-8"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >
