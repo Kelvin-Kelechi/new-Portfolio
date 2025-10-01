@@ -43,7 +43,7 @@ export default function Hero() {
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      element.scrollIntoView({ behavior: "smooth" });
     }
   };
 
@@ -79,7 +79,7 @@ export default function Hero() {
                 style={{ transitionDelay: "200ms" }}
               >
                 <TypewriterText
-                  text="Passionate Software Engineer with 5+ years of experience building scalable web and mobile applications. Skilled in React, Next.js, Node.js, and modern UI/UX. Always eager to learn, collaborate, and deliver high-quality solutions. Based in Tehran, available for freelance and remote work."
+                  text="Seasoned Software Engineer with 5+ years delivering robust web amd mobile platforms for high-growth startups and enterprise clients. Adept in React, Next.js, React-Native, Node.js, TypeScript, and scalable cloud architecture. Recognized for shipping secure, performant solutions that support thousands of concurrent users and delivering user-centered solutions across fintech, healthcare, and e-commerce industries. Headquartered in Lagos, Nigeria; available for global remote engagements."
                   speed={18}
                   className="inline"
                 />
@@ -95,14 +95,14 @@ export default function Hero() {
               }`}
               style={{ transitionDelay: "1200ms" }}
             >
-              <button 
-                onClick={() => scrollToSection('contact')}
+              <button
+                onClick={() => scrollToSection("contact")}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-6 sm:px-8 py-3 rounded-lg font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25 text-sm sm:text-base"
               >
                 Contact me
               </button>
-              <button 
-                onClick={() => scrollToSection('portfolio')}
+              <button
+                onClick={() => scrollToSection("portfolio")}
                 className="border border-gray-600 hover:border-gray-500 text-white px-6 sm:px-8 py-3 rounded-lg font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg text-sm sm:text-base"
               >
                 View my work
@@ -156,7 +156,7 @@ export default function Hero() {
                 style={{ transitionDelay: "1100ms" }}
               >
                 <svg
-                  className="w-6 h-6 sm:w-8 sm:w-8"
+                  className="w-6 h-6   sm:w-8"
                   fill="currentColor"
                   viewBox="0 0 20 20"
                 >

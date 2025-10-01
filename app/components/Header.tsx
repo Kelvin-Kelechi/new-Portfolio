@@ -1,8 +1,22 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  // Effect to prevent scrolling when menu is open
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    
+    // Cleanup function to restore scrolling when component unmounts
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [isMenuOpen]);
 
   const handleNavClick = (
     e: React.MouseEvent<HTMLAnchorElement>,
@@ -256,10 +270,23 @@ export default function Header() {
             {/* Quick Actions Bar */}
             <div className="mt-6 pt-6 border-t border-gray-700">
               <div className="flex justify-center space-x-4">
-                <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-all duration-300 hover:scale-105">
+                <a 
+                  href="/resume.pdf" 
+                  download
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-all duration-300 hover:scale-105 text-center"
+                >
                   Download CV
-                </button>
-                <button className="px-4 py-2 border border-gray-600 hover:border-gray-500 text-white text-sm rounded-lg transition-all duration-300 hover:scale-105">
+                </a>
+                <button 
+                  onClick={(e) => {
+                    setIsMenuOpen(false);
+                    const contactSection = document.getElementById("contact");
+                    if (contactSection) {
+                      contactSection.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }
+                  }}
+                  className="px-4 py-2 border border-gray-600 hover:border-gray-500 text-white text-sm rounded-lg transition-all duration-300 hover:scale-105"
+                >
                   Hire Me
                 </button>
               </div>
