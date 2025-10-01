@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 // Typewriter component
 function TypewriterText({
@@ -38,6 +39,13 @@ export default function Hero() {
   useEffect(() => {
     setIsVisible(true);
   }, []);
+
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   return (
     <section id="home" className="pt-30 sm:pt-24 pb-12 sm:pb-16 px-4 sm:px-6">
@@ -87,10 +95,16 @@ export default function Hero() {
               }`}
               style={{ transitionDelay: "1200ms" }}
             >
-              <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 sm:px-8 py-3 rounded-lg font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25 text-sm sm:text-base">
+              <button 
+                onClick={() => scrollToSection('contact')}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 sm:px-8 py-3 rounded-lg font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-blue-500/25 text-sm sm:text-base"
+              >
                 Contact me
               </button>
-              <button className="border border-gray-600 hover:border-gray-500 text-white px-6 sm:px-8 py-3 rounded-lg font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg text-sm sm:text-base">
+              <button 
+                onClick={() => scrollToSection('portfolio')}
+                className="border border-gray-600 hover:border-gray-500 text-white px-6 sm:px-8 py-3 rounded-lg font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg text-sm sm:text-base"
+              >
                 View my work
               </button>
             </div>
@@ -108,22 +122,21 @@ export default function Hero() {
 
               {/* Profile picture - Slide In from Right */}
               <div
-                className={`relative z-10 w-full h-full rounded-full overflow-hidden border-4 border-gray-700 transition-all duration-1000 ease-out ${
+                className={`relative z-10 w-full h-full rounded-full overflow-hidden border-4 border-gray-700 shadow-xl transition-all duration-1000 ease-out transform hover:scale-105 ${
                   isVisible
                     ? "opacity-100 translate-x-0"
                     : "opacity-0 translate-x-16"
                 }`}
                 style={{ transitionDelay: "600ms" }}
               >
-                <div className="w-full h-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white text-4xl sm:text-5xl lg:text-6xl font-bold">
-                  AK
-                </div>
-                {/* <Image
-                  src="/assets/images/profile.JPG"
-                  alt=""
-                  width={320}
-                  height={320}
-                /> */}
+                <Image
+                  src="/profile.png"
+                  alt="Anyigor Kelvin"
+                  fill
+                  className="object-cover object-center"
+                  sizes="(max-width: 640px) 256px, (max-width: 768px) 288px, 320px"
+                  priority
+                />
               </div>
 
               {/* Floating icons with continuous floating animation */}

@@ -4,6 +4,21 @@ import { useScrollReveal } from "../hooks/useScrollReveal";
 export default function Resume() {
   const { ref, isInView } = useScrollReveal(0.1);
 
+  const handleDownload = () => {
+    // Create a link element
+    const link = document.createElement('a');
+    link.href = '/resume.pdf';
+    link.download = 'Anyigor-Kelvin-Resume.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleView = () => {
+    // Open resume in a new tab
+    window.open('/resume.pdf', '_blank');
+  };
+
   return (
     <section id="resume" className="py-12 sm:py-16 px-4 sm:px-6">
       <div className="container mx-auto">
@@ -20,7 +35,10 @@ export default function Resume() {
           {/* Download Resume Button */}
           <div className="flex justify-center mb-12 sm:mb-16">
             <div className="flex flex-col sm:flex-row gap-4">
-              <button className="group relative inline-flex items-center justify-center px-8 py-4 overflow-hidden font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-2xl transition-all duration-300 ease-out hover:scale-105 hover:shadow-blue-500/25">
+              <button 
+                onClick={handleDownload}
+                className="group relative inline-flex items-center justify-center px-8 py-4 overflow-hidden font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-2xl transition-all duration-300 ease-out hover:scale-105 hover:shadow-blue-500/25"
+              >
                 <span className="absolute right-0 w-8 h-32 -mt-12 transition-all duration-1000 transform translate-x-12 bg-white opacity-10 rotate-12 group-hover:-translate-x-40 ease"></span>
                 <span className="relative flex items-center gap-3">
                   <svg
@@ -38,7 +56,10 @@ export default function Resume() {
                 </span>
               </button>
 
-              <button className="group relative inline-flex items-center justify-center px-8 py-4 overflow-hidden font-medium text-blue-600 border-2 border-blue-600 rounded-2xl transition-all duration-300 ease-out hover:bg-blue-600 hover:text-white hover:scale-105">
+              <button 
+                onClick={handleView}
+                className="group relative inline-flex items-center justify-center px-8 py-4 overflow-hidden font-medium text-blue-600 border-2 border-blue-600 rounded-2xl transition-all duration-300 ease-out hover:bg-blue-600 hover:text-white hover:scale-105"
+              >
                 <span className="absolute right-0 w-8 h-32 -mt-12 transition-all duration-1000 transform translate-x-12 bg-white opacity-10 rotate-12 group-hover:-translate-x-40 ease"></span>
                 <span className="relative flex items-center gap-3">
                   <svg

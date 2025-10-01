@@ -238,7 +238,7 @@ export default function Portfolio() {
   return (
     <section
       id="portfolio"
-      className="py-12 sm:py-16 px-4 sm:px-6 bg-gray-800/50"
+      className="py-12 sm:py-16 px-4 sm:px-6"
     >
       <div className="container mx-auto">
         <h2
