@@ -1,43 +1,2361 @@
 @import "tailwindcss";
 
-:root {
-  --background: #111827;
-  --foreground: #ffffff;
-  --card-bg: rgba(255, 255, 255, 0.05);
-  --accent: #3b82f6;
-  --accent-secondary: #8b5cf6;
+/* ══════════════════════════════════════════════════════════════════════════
+   THEME TOKENS
+
+   Two palettes, each tuned rather than inverted. They share one accent family
+   (copper) at different lightnesses so the identity survives the switch while
+   both sides clear WCAG AA against their own background.
+
+   Literal values live on :root / [data-theme] in @layer base. @theme inline
+   then aliases them, which keeps the *variable reference* in the generated
+   utility rather than baking in a value — that is what makes `bg-paper` and
+   `text-ink` follow the runtime theme switch.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@layer base {
+  /* Dark is now the alternate, so it is keyed only to an explicit attribute.
+     The bare `:root` fallback below carries the light palette, which is what
+     renders if the pre-paint script never runs. */
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+
+    /* Surfaces. Warm-tinted near-black — never #000, which reads as a hole. */
+    --paper: #0b0b0d;
+    --paper-raised: #121214;
+    --paper-sunk: #08080a;
+    --paper-glass: rgba(18, 18, 20, 0.72);
+
+    /* Ink. Warm off-white, echoing paper stock rather than screen white. */
+    --ink: #f0ede7;
+    --ink-muted: #a5a29b;
+    --ink-faint: #6d6a65;
+
+    /* Hairlines. Alpha, so they sit correctly on any surface. */
+    --rule: rgba(240, 237, 231, 0.1);
+    --rule-strong: rgba(240, 237, 231, 0.2);
+
+    /* Primary accent. Coral — the old copper, pushed brighter. */
+    --accent: #ff6f4d;
+    --accent-hover: #ff8a6b;
+    --accent-soft: rgba(255, 111, 77, 0.15);
+    --accent-line: rgba(255, 111, 77, 0.42);
+
+    /*
+     * The bright set. These are FILLS, not text colours — they carry
+     * near-black ink on top (see `.on-color`), which is what lets the same
+     * five values work identically in dark and light mode. A yellow band is a
+     * yellow band with black text either way; only the paper around it moves.
+     */
+    /* Lightened from #7c5cff on purpose. At the darker value the fill's
+       relative luminance is ~0.19, so even *pure* black text on it is only
+       4.8:1 — leaving no headroom at all for the muted and faint tiers, which
+       dropped to ~2:1. At #9b7fff the fill is ~0.29 and full-strength black
+       clears 6.8:1, so the whole ink scale fits above AA. */
+    --violet: #9b7fff;
+    --coral: #ff6f4d;
+    --amber: #ffc93c;
+    --mint: #2fd597;
+    --sky: #59a5ff;
+    /* The Ethos section fill. Light enough that the whole `on-color` ink scale
+       clears AA on it with room to spare — pure black reads 14.1:1. */
+    --blush: #ffc4c9;
+    /* Shading tone for the illustration's curled fingers. Flat, not a
+       gradient — the form comes from silhouette and overlap. */
+    --sky-deep: #2f6fd0;
+    /* Neutral block fill for Method. The stacked cards there carry five
+       saturated colours of their own, and a coloured band behind them left the
+       section with six competing hues. Warm rather than pure grey so it sits
+       in the same family as the paper. Near-black on it reads 13.2:1. */
+    --slate: #e6e3dd;
+
+    /*
+     * Identity fill: the logo chip, the hero's role pill, the reading-progress
+     * bar. One token so those three can never drift apart — they are the pieces
+     * a visitor reads as "the brand colour", and two of them are on screen at
+     * once at the top of every page.
+     *
+     * Identical in both themes, like the rest of the fill set. That is the
+     * contract `.on-color` exists to support: a colour block is the same block
+     * either side of the toggle, and only the paper around it moves. Near-black
+     * on it measures 13.8:1.
+     */
+    --brand: #4dff6a;
+
+    /*
+     * The assistant's own hue — deliberately NOT the coral brand accent.
+     *
+     * The AI affordance is the one control on the page that is not navigation
+     * and not content, and giving it its own colour is what stops it reading as
+     * just another link. Green-cyan sits roughly opposite coral on the wheel, so
+     * it registers as a deliberate second voice rather than a clash.
+     *
+     * Split by theme like `--accent` is, and for the same reason: a mint bright
+     * enough to glow on near-black is only 1.85:1 on cream paper, far under the
+     * 3:1 that WCAG 1.4.11 asks of a meaningful graphic. On dark, `#3ee9b0`
+     * reads 12.6:1.
+     */
+    --ai: #3ee9b0;
+    /* Glow stops. Decorative only — they never carry meaning on their own, so
+       they are free to be the saturated end of the ramp. */
+    --ai-glow-a: #34e2a8;
+    --ai-glow-b: #4fd8f0;
+    /* Halo strength, per theme. A glow is light ADDED to a surface, so the same
+       alpha that reads as a soft aura on near-black reads as a dirty smudge on
+       cream — the paper has no headroom left to brighten into. Dark can afford
+       the full value; light gets a little over half. */
+    --ai-halo: 0.5;
+    --ai-core: 0.22;
+
+    /* Outline for sticker-style edges sitting on paper. Tracks the ink, so it
+       is off-white on dark and near-black on cream. */
+    --outline: var(--ink);
+    --outline-w: 1.5px;
+
+    /* Lighting, pulled toward the bright set so the glow behind the hero
+       belongs to the same palette as the stickers in front of it. */
+    --aurora-1: rgba(255, 111, 77, 0.16);
+    --aurora-2: rgba(124, 92, 255, 0.16);
+    --aurora-3: rgba(47, 213, 151, 0.1);
+
+    /* Depth. The top-edge highlight is what makes a panel read as lit. */
+    --edge-light: rgba(255, 255, 255, 0.07);
+    --shadow-panel: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 32px rgba(0, 0, 0, 0.35);
+    --shadow-lift: 0 2px 4px rgba(0, 0, 0, 0.5), 0 20px 60px rgba(0, 0, 0, 0.45);
+
+    --grain-opacity: 0.05;
+  }
+
+  /* The default. `:root` unqualified means a failed script or a no-JS visitor
+     still gets the intended theme rather than a flash of the wrong one. */
+  :root,
+  :root[data-theme="light"] {
+    color-scheme: light;
+
+    --paper: #fdfbf7;
+    --paper-raised: #ffffff;
+    --paper-sunk: #f0ece4;
+    --paper-glass: rgba(253, 251, 247, 0.8);
+
+    --ink: #16150f;
+    --ink-muted: #55524a;
+    --ink-faint: #8a857a;
+
+    --rule: rgba(22, 21, 15, 0.12);
+    --rule-strong: rgba(22, 21, 15, 0.24);
+
+    /* Darkened so the same hue clears AA as *text* on paper. The fills below
+       are unchanged — they never carry light text. */
+    --accent: #cf4420;
+    --accent-hover: #b03616;
+    --accent-soft: rgba(207, 68, 32, 0.1);
+    --accent-line: rgba(207, 68, 32, 0.36);
+
+    /* Identical fills to the dark theme. This is the point: a colour block
+       does not change between themes, so the site keeps one identity across
+       the toggle instead of reading as two different sites. */
+    /* Lightened from #7c5cff on purpose. At the darker value the fill's
+       relative luminance is ~0.19, so even *pure* black text on it is only
+       4.8:1 — leaving no headroom at all for the muted and faint tiers, which
+       dropped to ~2:1. At #9b7fff the fill is ~0.29 and full-strength black
+       clears 6.8:1, so the whole ink scale fits above AA. */
+    --violet: #9b7fff;
+    --coral: #ff6f4d;
+    --amber: #ffc93c;
+    --mint: #2fd597;
+    --sky: #59a5ff;
+    /* The Ethos section fill. Light enough that the whole `on-color` ink scale
+       clears AA on it with room to spare — pure black reads 14.1:1. */
+    --blush: #ffc4c9;
+    /* Shading tone for the illustration's curled fingers. Flat, not a
+       gradient — the form comes from silhouette and overlap. */
+    --sky-deep: #2f6fd0;
+    /* Neutral block fill for Method. The stacked cards there carry five
+       saturated colours of their own, and a coloured band behind them left the
+       section with six competing hues. Warm rather than pure grey so it sits
+       in the same family as the paper. Near-black on it reads 13.2:1. */
+    --slate: #e6e3dd;
+
+    /*
+     * Identity fill: the logo chip, the hero's role pill, the reading-progress
+     * bar. One token so those three can never drift apart — they are the pieces
+     * a visitor reads as "the brand colour", and two of them are on screen at
+     * once at the top of every page.
+     *
+     * Identical in both themes, like the rest of the fill set. That is the
+     * contract `.on-color` exists to support: a colour block is the same block
+     * either side of the toggle, and only the paper around it moves. Near-black
+     * on it measures 13.8:1.
+     */
+    --brand: #4dff6a;
+
+    /* Darkened hard from the dark theme's `#3ee9b0`, which measures 1.85:1 on
+       this paper. `#0e7c66` reads 5.01:1 — clear of 3:1 for a graphic with room
+       to spare, and clear of 4.5:1 should it ever carry text. */
+    --ai: #0e7c66;
+    --ai-glow-a: #10b981;
+    --ai-glow-b: #06b6d4;
+    --ai-halo: 0.28;
+    --ai-core: 0.13;
+
+    --outline: var(--ink);
+    --outline-w: 1.5px;
+
+    --aurora-1: rgba(255, 111, 77, 0.16);
+    --aurora-2: rgba(124, 92, 255, 0.14);
+    --aurora-3: rgba(47, 213, 151, 0.1);
+
+    --edge-light: rgba(255, 255, 255, 0.9);
+    --shadow-panel: 0 1px 2px rgba(22, 21, 15, 0.06), 0 8px 28px rgba(22, 21, 15, 0.06);
+    --shadow-lift: 0 2px 6px rgba(22, 21, 15, 0.08), 0 24px 60px rgba(22, 21, 15, 0.1);
+
+    --grain-opacity: 0.035;
+  }
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card-bg: var(--card-bg);
+  --color-paper: var(--paper);
+  --color-paper-raised: var(--paper-raised);
+  --color-paper-sunk: var(--paper-sunk);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
   --color-accent: var(--accent);
-  --color-accent-secondary: var(--accent-secondary);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-outline: var(--outline);
+
+  --color-brand: var(--brand);
+  --color-violet: var(--violet);
+  --color-coral: var(--coral);
+  --color-amber: var(--amber);
+  --color-mint: var(--mint);
+  --color-sky: var(--sky);
+  --color-blush: var(--blush);
+
+  /* Gabarito is the chunky rounded geometric that carries the display voice.
+     Schibsted stays for body — a neutral grotesk under a loud display face
+     reads better than a loud face doing both jobs. */
+  --font-display: var(--font-gabarito), "Trebuchet MS", system-ui, sans-serif;
+  --font-sans: var(--font-schibsted), system-ui, "Segoe UI", Helvetica, Arial,
+    sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo,
+    monospace;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+@theme {
+  /* ── Fluid type scale. The `--text-*--line-height` modifier syntax is v4. ── */
+  --text-meta: 0.6875rem;
+  --text-meta--line-height: 1.2;
+  --text-meta--letter-spacing: 0.14em;
+
+  --text-body: clamp(1rem, 0.96rem + 0.18vw, 1.0625rem);
+  --text-body--line-height: 1.65;
+
+  --text-lead: clamp(1.125rem, 1.01rem + 0.5vw, 1.4375rem);
+  --text-lead--line-height: 1.48;
+
+  --text-title: clamp(1.375rem, 1.15rem + 1vw, 2rem);
+  --text-title--line-height: 1.14;
+
+  --text-headline: clamp(2rem, 1.35rem + 2.8vw, 3.75rem);
+  --text-headline--line-height: 1.02;
+  --text-headline--letter-spacing: -0.015em;
+
+  --text-display: clamp(2.75rem, 1.4rem + 5.6vw, 6.25rem);
+  --text-display--line-height: 0.96;
+  --text-display--letter-spacing: -0.02em;
+
+  --text-mega: clamp(2.75rem, 0.9rem + 8.4vw, 8.25rem);
+  --text-mega--line-height: 0.9;
+  --text-mega--letter-spacing: -0.03em;
+
+  /* ── Shape. Fat radii are the single loudest signal of the new direction:
+     a 2rem corner on a card reads playful where a 4px corner reads corporate. ── */
+  --radius-pill: 999px;
+  --radius-card: 1.75rem;
+  --radius-block: 2.5rem;
+  --radius-sm: 0.875rem;
+  /* Vertical depth of a full-bleed section's top/bottom arc. */
+  --radius-lip: clamp(2.25rem, 4.5vw, 5rem);
+
+  /* ── Rhythm. Named keys generate px-gutter, py-section, etc. ──
+     `section` was 11rem, which put ~350px of nothing between a section rule
+     and its first content and made every anchor jump land in empty space.
+     8rem still reads as generous editorial whitespace without the void. */
+  --spacing-gutter: clamp(1.25rem, 4.5vw, 5rem);
+  --spacing-section: clamp(3.75rem, 1.5rem + 6.5vw, 8rem);
+  --spacing-band: clamp(1.75rem, 0.9rem + 3vw, 3.5rem);
+  --spacing-row: clamp(1.25rem, 0.6rem + 1.6vw, 2.25rem);
+
+  --container-measure: 62ch;
+  --container-measure-sm: 46ch;
+  --container-shell: 92rem;
+
+  /* Spring-adjacent easings. `--ease-*` is a real v4 namespace. */
+  --ease-editorial: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
+/* ══════════════════════════════════════════════════════════════════════════
+   BASE
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@layer base {
+  :root {
+    /*
+     * The bar's own height, NOT counting the notch. 56px on a phone against
+     * 68px from `sm` — a 68px bar eats 8% of an iPhone SE's viewport for a row
+     * that holds a monogram and two buttons, and every premium mobile header
+     * (Linear 56, iOS navigation bar 44, Stripe 60) sits in this range.
+     *
+     * Everything that offsets for the header reads this, so the two values stay
+     * in sync automatically: `scroll-padding-top`, section `scroll-margin-top`,
+     * the drawer's top inset, and the logo-reveal observer's `rootMargin`.
+     */
+    --header-h: 3.5rem;
+    /*
+     * The notch/Dynamic Island inset, resolved once. `env()` is 0 in a browser
+     * tab and non-zero in a standalone/installed context and in landscape, so
+     * this costs nothing where it is not needed. Kept as its own variable so a
+     * fixed element can offset by the inset without also having to know the
+     * bar's height.
+     */
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    /* The full space the fixed bar occupies from the top of the viewport. */
+    --header-total: calc(var(--header-h) + var(--safe-top));
+  }
+  @media (min-width: 640px) {
+    :root {
+      --header-h: 4.25rem;
+    }
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: calc(var(--header-total) + 2rem);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: 1.65;
+    font-feature-settings: "kern", "liga", "calt";
+    /* `clip`, not `hidden`: hidden makes body a scroll container, which breaks
+       position:sticky on the section labels. clip contains without that. */
+    overflow-x: clip;
+    /* Theme switch. Transitioned on <html> so every descendant using the vars
+       crossfades together instead of popping element by element. */
+    transition: background-color 500ms var(--ease-editorial),
+      color 500ms var(--ease-editorial);
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    /* Gabarito is variable to 900. 760 is the sweet spot: heavy enough to
+       read as a display face, short of the point where the counters close up
+       at mega sizes. */
+    font-weight: 760;
+    font-synthesis: none;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Anchor targets must clear the fixed header. */
+  [id] {
+    scroll-margin-top: calc(var(--header-total) + 2.5rem);
+  }
+
+  ::selection {
+    background: var(--accent);
+    color: var(--paper);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* Scrollbar, themed. Cheap detail, disproportionately noticeable. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--rule-strong) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: var(--rule-strong);
+    border-radius: 99px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+
+  .skip-link {
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 200;
+    transform: translateY(-250%);
+    background: var(--ink);
+    color: var(--paper);
+    padding: 0.625rem 1rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-meta);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    transition: transform 220ms var(--ease-editorial);
+  }
+  .skip-link:focus {
+    transform: translateY(0);
+  }
 }
 
-::-webkit-scrollbar-track {
-  background: #1f2937;
+/* ══════════════════════════════════════════════════════════════════════════
+   MOTION
+
+   Everything here is compositor-only (opacity + transform) so it holds 60fps
+   without touching layout. The reveal machinery is gated on
+   `(scripting: enabled)` — if JS fails or the query is unsupported, content
+   renders VISIBLE. The failure direction matters more than the animation.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@layer base {
+  @media (scripting: enabled) {
+    [data-reveal] .reveal-item {
+      opacity: 0;
+      transform: translate3d(0, var(--reveal-y, 1.75rem), 0);
+      transition: opacity 800ms var(--ease-editorial),
+        transform 800ms var(--ease-editorial);
+      transition-delay: calc(var(--i, 0) * 70ms);
+      will-change: opacity, transform;
+    }
+    [data-reveal="in"] .reveal-item {
+      opacity: 1;
+      transform: none;
+      will-change: auto;
+    }
+
+    /* Character-level reveal for display type. */
+    [data-reveal] .reveal-char {
+      opacity: 0;
+      transform: translate3d(0, 0.6em, 0);
+      transition: opacity 700ms var(--ease-editorial),
+        transform 900ms var(--ease-spring);
+      transition-delay: calc(var(--i, 0) * 28ms);
+    }
+    [data-reveal="in"] .reveal-char {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 1.75rem, 0);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* Above-the-fold entrance. Pure CSS — no JS, no client component. */
+  .rise {
+    animation: rise 1000ms var(--ease-editorial) both;
+    animation-delay: calc(var(--i, 0) * 85ms);
+  }
+
+  @keyframes drift {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+    33% {
+      transform: translate3d(4%, -3%, 0) scale(1.08);
+    }
+    66% {
+      transform: translate3d(-3%, 3%, 0) scale(0.96);
+    }
+  }
+
+  @keyframes marquee {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(-50%, 0, 0);
+    }
+  }
+
+  @keyframes breathe {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.45;
+      transform: scale(0.82);
+    }
+  }
+
+  @keyframes halo {
+    0% {
+      opacity: 0.55;
+      transform: scale(1);
+    }
+    70%,
+    100% {
+      opacity: 0;
+      transform: scale(2.6);
+    }
+  }
+
+  /*
+   * Sticker motion.
+   *
+   * Each uses an INDEPENDENT transform property (`rotate` / `translate` /
+   * `scale`) rather than `transform`. That is what lets a shape hold its
+   * static tilt from the component while an animation drives a different
+   * axis — with `transform` they would overwrite each other and every
+   * animated shape would snap to 0°.
+   *
+   * All four start and end on the same value, so the global reduced-motion
+   * rule (duration 0.01ms, one iteration) lands them exactly where they began
+   * instead of freezing mid-gesture.
+   */
+  @keyframes sticker-spin {
+    from {
+      rotate: 0deg;
+    }
+    to {
+      rotate: 360deg;
+    }
+  }
+  @keyframes sticker-wobble {
+    0%,
+    100% {
+      rotate: -9deg;
+    }
+    50% {
+      rotate: 9deg;
+    }
+  }
+  @keyframes sticker-float {
+    0%,
+    100% {
+      translate: 0 0;
+    }
+    50% {
+      translate: 0 -14px;
+    }
+  }
+  @keyframes sticker-beat {
+    0%,
+    100% {
+      scale: 1;
+    }
+    50% {
+      scale: 1.14;
+    }
+  }
+
+  /*
+   * Hand sway — a direct transcription of the reference implementation.
+   *
+   * Measured off the source rather than eyeballed: two `<img>` tags carrying
+   * `animate-blue-thumb` (5s, 0s delay, rotate 0 → -5deg, scale 1.05) and
+   * `animate-brown-thumb` (6s, 1.5s delay, rotate 0 → -4deg, scale 1.2), both
+   * on `cubic-bezier(0.16, 1, 0.3, 1)` about the element's centre.
+   *
+   * Three details that matter and are easy to get wrong:
+   *
+   *   - It is a ROTATION, not a float. No translation at any point.
+   *   - There is no 100% keyframe. The browser fills the second half from the
+   *     element's underlying value, so the return leg re-runs the easing
+   *     rather than mirroring it — that asymmetry is the whole character.
+   *   - The easing is easeOutExpo, not ease-in-out. Each half snaps away and
+   *     then drifts into place; a symmetric ease reads as a metronome.
+   *
+   * Scale is held constant inside the keyframe because `transform` is a single
+   * property — omitting it here would reset the element to scale 1 for the
+   * duration of the animation.
+   */
+  @keyframes hand-sway {
+    0% {
+      transform: scale(var(--hand-scale)) rotate(var(--hand-rotation));
+    }
+    50% {
+      transform: scale(var(--hand-scale)) rotate(var(--hand-tilt));
+    }
+  }
+
+  /*
+   * Token spin — transcribed from the reference's `@keyframes rotate`.
+   *
+   * A SINGLE 100% frame, deliberately. The 0% comes from the element's own
+   * underlying value, and with easeOutExpo across the whole turn the token
+   * accelerates hard out of the start and then creeps the last few degrees.
+   * Writing this as `from 0deg / to 360deg` with linear timing — the obvious
+   * version — produces a completely different, mechanical spin.
+   */
+  @keyframes token-spin {
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  /*
+   * Hand scale, by breakpoint.
+   *
+   * A gentle ramp — 1.0 -> 1.1 -> 1.2 — NOT the aggressive 0.6/0.75 this used
+   * to carry. Every hand position is already a percentage of the card, so the
+   * composition is scale-invariant: shrink the card and the whole grip shrinks
+   * with it, intact. A steep mobile ramp actively breaks that, pulling the
+   * hands away from a card that has itself got smaller. That is what left the
+   * thumbs floating in the gutter rather than gripping.
+   *
+   * The source lands at ~0.85x its desktop hand-to-card ratio on mobile (1.20
+   * vs 1.33 for the brown hand), which is what this ramp reproduces — slightly
+   * less crop on a narrow screen, same composition.
+   *
+   * These live on the stage rather than on each image so the pairs always
+   * change together; a per-image breakpoint would let one hand resize a frame
+   * before the other and visibly break the grip.
+   */
+  .hand-stage {
+    /*
+     * Parity with the brown pair at every breakpoint, which is the point: the
+     * two hands are mirrored artwork and any gap here reads as the left and
+     * right of the composition being drawn at different sizes. Blue used to run
+     * 0.82/0.98 against brown's 1/1.1 to keep it off the `--ink-faint` stat
+     * labels, which it has nowhere near enough contrast against. That job now
+     * belongs to `--cover-top`, which crops the wrist outright rather than
+     * shrinking the whole hand to keep it short.
+     */
+    --scale-blue: 1;
+    --scale-brown: 1;
+    /*
+     * How far the hands sit from the card, as a fraction of their desktop
+     * offset — 1 is the desktop composition, lower pulls them inward.
+     *
+     * Split by axis, because the two directions want opposite things:
+     *
+     *   x stays at 1. The thumbs are meant to touch the card's left and right
+     *   edges with their bodies running off-frame. Pulling x in drags the whole
+     *   thumb onto the card and it lies diagonally across the portrait's chest
+     *   — the hand stops holding the product and starts covering it.
+     *
+     *   y pulls hard. The brown pair hangs 78% of a card-height above the card,
+     *   which on a phone puts it up among the CTAs and the pitch. At 0.45 it
+     *   tucks down to just above the card's top edge, still gripping the
+     *   corner, and leaves the copy clean.
+     *
+     * The blue pair is near-unaffected by the y pull — its offset is already
+     * close to 50%, so scaling its distance from centre barely moves it.
+     */
+    --hand-pull-x: 1;
+    --hand-pull-y: 0.45;
+    /*
+     * Where the paper cover cuts the blue wrist, as a percentage of the card's
+     * height from its top. On mobile the stat row sits only ~55% of a card
+     * height below the card, so a cut at the desktop 134% leaves the hand
+     * running straight through "YEARS SHIPPING" — and those labels are
+     * `--ink-faint`, which is unreadable on a saturated blue. 104% puts the
+     * cut just under the card, clear of the thumb tip which grips the corner at
+     * 71% here.
+     *
+     * This can never go below 100%: the cover sits at z-3, above the card at
+     * z-0, so a value inside the card's own box paints paper over the bottom of
+     * the portrait.
+     */
+    --cover-top: 104%;
+  }
+  @media (min-width: 640px) {
+    .hand-stage {
+      --scale-blue: 1.1;
+      --scale-brown: 1.1;
+      --hand-pull-y: 0.72;
+      --cover-top: 106%;
+    }
+  }
+  @media (min-width: 1024px) {
+    .hand-stage {
+      --scale-blue: 1.2;
+      --scale-brown: 1.2;
+      --hand-pull-y: 1;
+      /* 116%, not the old 134%. The brown pair is clipped by the viewport's
+         right edge and shows only ~12% of a card-width past the card; the blue
+         pair has nothing to clip it on the left and ran 78% past, which is what
+         made one side read as a cropped grip and the other as a whole fist
+         lying on the page. This cover is the only crop available on that side,
+         so it does the work — 116% cuts the wrist just below the card and
+         leaves the thumb (gripping at 108%) and one knuckle, which is the
+         mirror of what brown shows. */
+      --cover-top: 116%;
+    }
+  }
+
+  /* The reference's own `rotate` keyframe, transcribed. No 0% frame — it
+     starts from the element's underlying value, which for these tokens is
+     no transform at all. */
+  @keyframes token-rotate {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes shimmer {
+    from {
+      background-position: -180% 0;
+    }
+    to {
+      background-position: 180% 0;
+    }
+  }
+
+  @keyframes overlay-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes panel-in {
+    from {
+      opacity: 0;
+      transform: translate3d(0, -0.75rem, 0) scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* ── The one global reduced-motion contract. ──
+     Animations collapse to instant; nothing is left mid-transition, and no
+     reveal can strand content at opacity 0. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      /* Delays must go too, not just durations. A staggered list sets its
+         delay inline — collapsing only the duration leaves every item still
+         waiting its turn, so the sequence plays out over the full stagger as a
+         series of instant pops. That is more jarring than the animation it was
+         meant to replace, not less. */
+      animation-delay: 0s !important;
+      transition-delay: 0s !important;
+      scroll-behavior: auto !important;
+    }
+    [data-reveal] .reveal-item,
+    [data-reveal] .reveal-char {
+      opacity: 1 !important;
+      transform: none !important;
+    }
+  }
+
+  /* Same contract, driven by the in-page accessibility toggle rather than the
+     OS setting. Duplicated rather than shared because a media query and an
+     attribute selector cannot be combined in one rule. */
+  :root[data-motion="reduced"] {
+    scroll-behavior: auto;
+  }
+  :root[data-motion="reduced"] *,
+  :root[data-motion="reduced"] *::before,
+  :root[data-motion="reduced"] *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  :root[data-motion="reduced"] [data-reveal] .reveal-item,
+  :root[data-motion="reduced"] [data-reveal] .reveal-char {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 
-::-webkit-scrollbar-thumb {
-  background: #4b5563;
-  border-radius: 4px;
+/* ══════════════════════════════════════════════════════════════════════════
+   UTILITIES
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@utility shell {
+  width: 100%;
+  max-width: var(--container-shell);
+  margin-inline: auto;
+  padding-inline: var(--spacing-gutter);
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
+@utility rule-t {
+  border-block-start: 1px solid var(--rule);
+  @media (min-resolution: 2dppx) {
+    border-block-start-width: 0.5px;
+  }
+}
+
+@utility rule-b {
+  border-block-end: 1px solid var(--rule);
+  @media (min-resolution: 2dppx) {
+    border-block-end-width: 0.5px;
+  }
+}
+
+@utility label {
+  font-family: var(--font-mono);
+  font-size: var(--text-meta);
+  line-height: 1.2;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Tabular figures for anything that counts or ticks. Prevents the width
+   jitter that gives away an animated number. */
+@utility nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Underline that grows from the left. Replaces every hover:scale-105. */
+@utility underline-grow {
+  background-image: linear-gradient(var(--accent), var(--accent));
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0% 1px;
+  transition: background-size 420ms var(--ease-editorial), color 260ms linear;
+  &:hover,
+  &:focus-visible {
+    background-size: 100% 1px;
+    color: var(--accent);
+  }
+}
+
+/* Transport layer for <Magnetic>. The component only writes --mx / --my. */
+@utility magnet {
+  transform: translate3d(var(--mx, 0px), var(--my, 0px), 0);
+  transition: transform 600ms var(--ease-editorial);
+  @media (prefers-reduced-motion: reduce) {
+    transform: none;
+  }
+}
+
+/* Transport layer for <Tilt>. Same contract: the component writes vars only. */
+@utility tiltable {
+  transform: perspective(900px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))
+    translate3d(0, 0, 0);
+  transform-style: preserve-3d;
+  transition: transform 500ms var(--ease-editorial);
+  @media (prefers-reduced-motion: reduce) {
+    transform: none;
+  }
+}
+
+/*
+ * A raised panel. The inset top-edge highlight is the whole trick — it is what
+ * separates "a box with a border" from "a surface catching light".
+ */
+@utility surface {
+  background: var(--paper-raised);
+  border: var(--outline-w) solid var(--rule-strong);
+  border-radius: var(--radius-card);
+  box-shadow: inset 0 1px 0 0 var(--edge-light), var(--shadow-panel);
+}
+
+/*
+ * Expands a control's touch target to the 44x44 floor (WCAG 2.5.5 AAA, and the
+ * iOS HIG / Material minimum) WITHOUT changing what is painted.
+ *
+ * Three 44px circles in a row on a 320px bar is 132px of solid ink and reads as
+ * heavy, which is exactly the "unbalanced" complaint. Every premium mobile bar
+ * resolves this the same way: paint a 40px control, hit-test a 44px one. The
+ * pseudo-element is transparent, sits above the icon but below nothing else,
+ * and costs no layout — so controls can still be spaced 8px apart visually
+ * while their targets touch.
+ *
+ * `max()` rather than a fixed 44px so the same utility is a no-op on controls
+ * that are already larger, such as the drawer's full-width rows.
+ */
+@utility tap-target {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    translate: -50% -50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+  }
+}
+
+@utility glass {
+  background: var(--paper-glass);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: var(--outline-w) solid var(--rule-strong);
+  border-radius: var(--radius-card);
+  box-shadow: inset 0 1px 0 0 var(--edge-light), var(--shadow-panel);
+}
+
+/* Ink gradient on display type. Subtle enough to read as printing, not as a
+   gradient — the top stays full-strength ink and only the descender fades. */
+@utility ink-fade {
+  background: linear-gradient(
+    180deg,
+    var(--ink) 0%,
+    var(--ink) 55%,
+    color-mix(in oklab, var(--ink) 62%, transparent) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/*
+ * ── THE COLOUR-BLOCK CONTRACT ──
+ *
+ * Applied to any element filled with one of the bright values. It rewrites the
+ * ink scale locally to near-black, so every child — headings, `label`, muted
+ * body copy, icons, hairlines, outlines — flips to dark-on-bright without a
+ * single component knowing a colour block exists.
+ *
+ * This is what lets the same five fills work in both themes. A yellow band is
+ * black-on-yellow in dark mode and black-on-yellow in light mode; only the
+ * paper around it moves. Without this, every section would need a dark variant
+ * and a light variant and the two themes would drift into different sites.
+ */
+@utility on-color {
+  --ink: #16150f;
+  /* Higher alphas than the paper themes use. These sit on saturated mid-tone
+     fills rather than near-white or near-black paper, so there is far less
+     luminance gap to spend — 0.72/0.55 (the values that read as comfortably
+     muted on paper) fall under 3:1 on violet and coral. */
+  --ink-muted: rgba(22, 21, 15, 0.9);
+  /* 0.84, not 0.78: violet is the darkest fill and sets the floor. At 0.78 the
+     faint tier lands at 4.32:1 against it — below AA. 0.84 clears every fill
+     with margin (violet 4.80, the rest 5.0–7.1). */
+  --ink-faint: rgba(22, 21, 15, 0.84);
+  --rule: rgba(22, 21, 15, 0.22);
+  --rule-strong: rgba(22, 21, 15, 0.38);
+  --outline: #16150f;
+  --paper-raised: rgba(255, 255, 255, 0.5);
+  --paper-sunk: rgba(22, 21, 15, 0.08);
+  --edge-light: rgba(255, 255, 255, 0.45);
+  --accent: #16150f;
+  --accent-soft: rgba(22, 21, 15, 0.1);
+  color: var(--ink);
+}
+
+/* Sticker edge. The thick outline is the defining gesture of the reference —
+   it is what makes an element read as a cut-out laid on the page rather than
+   a region of it. */
+@utility outlined {
+  border: var(--outline-w) solid var(--outline);
+}
+
+@utility pill {
+  border-radius: var(--radius-pill);
+}
+
+@utility accent-dot {
+  position: relative;
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+/* ── Stacked accordion ──────────────────────────────────────────────────────
+   The panel opens on hover, and the height animation is a grid track going
+   0fr → 1fr rather than a measured max-height. That matters here: max-height
+   needs JS to read scrollHeight, which cannot run on a CSS hover, and picking
+   a fixed cap instead either clips long copy or makes short copy ease against
+   nothing. The grid track resolves to the content's real height, so one rule
+   covers every card whatever its length.
+
+   Hover is gated behind `hover: hover` so it never fires on touch, where a tap
+   would otherwise register as a hover and leave a card stuck open. Touch and
+   keyboard go through `[data-open]` and `:focus-within` instead — same panel,
+   three ways in. */
+.accordion-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  /* Flutterwave's own curve and duration. It is an ease-out-expo: almost all
+     the distance is covered in the first third, so the sheet appears to be
+     caught and settled rather than played back at a constant rate. Slower than
+     a normal disclosure on purpose — the travel is a full card height. */
+  transition: grid-template-rows 0.73s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Sheets, not cards. Only the top corners are round and the shadow is cast
+   UPWARD (negative y), so each card's bottom edge is cut off by the one in
+   front instead of closing itself off. That is what makes the stack read as
+   overlapping sheets rather than five discrete rounded rectangles. */
+.accordion-sheet {
+  border-radius: 2.5rem 2.5rem 0 0;
+  box-shadow: 0 -5px 40px rgba(0, 0, 0, 0.25);
+  transition: filter 0.73s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (min-width: 768px) {
+  .accordion-sheet {
+    border-radius: 3rem 3rem 0 0;
+  }
+}
+
+/* The last sheet is permanently open and runs to the foot of the section, so
+   its bottom edge is owned by the block's curve mask rather than by a radius.
+   No `:last-child` rounding here — that would put a curve inside the scoop. */
+
+/* An always-open panel has no collapsed state to animate to. Setting the track
+   directly rather than reusing the hover rule keeps it open through a pointer
+   passing over it, which would otherwise re-trigger the 0.73s transition on a
+   sheet that never closes. */
+.accordion-panel[data-always-open] {
+  grid-template-rows: 1fr;
+  transition: none;
+}
+
+/* `min-height: 0` is load-bearing. A grid item's automatic minimum size is its
+   content, which would hold the row open at full height and defeat the 0fr. */
+.accordion-panel > * {
+  overflow: hidden;
+  min-height: 0;
+}
+
+/*
+ * Focus does NOT open a card. Two earlier attempts here were both wrong:
+ *
+ *   `:focus-within` — a tap focuses the button it lands on, so the card the
+ *   user had just opened stayed pinned open by its own focus, and the second
+ *   tap, the one meant to close it, cleared the open id and changed nothing
+ *   on screen.
+ *
+ *   `:has(:focus-visible)` — fixed the thumb, but left the keyboard telling a
+ *   lie. Tabbing onto a card revealed its body while the button still
+ *   reported `aria-expanded="false"`, so a screen reader announced "collapsed"
+ *   over content that was on screen.
+ *
+ * The keyboard uses the plain disclosure instead: Tab to the button, Enter or
+ * Space to toggle. `data-open` is then the single source of truth for the
+ * open state, `aria-expanded` is derived from the same value, and the two
+ * cannot disagree. Hover stays a mouse-only affordance on top.
+ */
+.accordion-card[data-open] .accordion-panel {
+  grid-template-rows: 1fr;
+}
+
+/* The arrow is driven by the same conditions as the panel, in the same place,
+   so the two cannot fall out of step — a card showing its body under a
+   downward arrow is the kind of mismatch that reads as a bug. */
+.accordion-arrow {
+  transition: transform 300ms var(--ease-spring);
+}
+
+.accordion-card[data-open] .accordion-arrow {
+  transform: rotate(180deg);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .accordion-card:hover .accordion-panel {
+    grid-template-rows: 1fr;
+  }
+  .accordion-card:hover .accordion-arrow {
+    transform: rotate(180deg);
+  }
+}
+
+/* NO z-index change on the open card, deliberately.
+ *
+ * Raising it looks like the safe thing to do and is the opposite. The sheets
+ * are in normal flow, so an opening card PUSHES its neighbours down — it is
+ * never covered and never needed the promotion. What the promotion did do was
+ * invert the stacking at that one seam: the open card's square bottom edge
+ * rode over the next card's rounded top, flattening its curve into a plain
+ * bar for as long as the card stayed open.
+ *
+ * The order has to hold in both states — every card above the one in front of
+ * it, open or shut — which is exactly what `zIndex: index + 1` alone gives. */
+
+@media (prefers-reduced-motion: reduce) {
+  .accordion-panel {
+    transition-duration: 0.01ms;
+  }
+}
+
+/* ── Contact ────────────────────────────────────────────────────────────────
+   Two washes of colour drifting behind the panels, blurred well past being
+   readable as shapes. Their job is to give the frosted panels something to
+   refract: a backdrop-filter over a flat fill has nothing to blur, so the
+   glass reads as a plain translucent rectangle. `contain: strict` keeps the
+   120px blur from forcing the whole section to repaint. */
+.contact-aurora {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+}
+
+.contact-aurora::before,
+.contact-aurora::after {
+  content: "";
+  position: absolute;
+  width: 42rem;
+  height: 42rem;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.5;
+  will-change: transform;
+}
+
+.contact-aurora::before {
+  top: -14rem;
+  left: -10rem;
+  background: var(--violet);
+  animation: aurora-a 26s var(--ease-editorial, ease-in-out) infinite alternate;
+}
+
+.contact-aurora::after {
+  right: -12rem;
+  bottom: -16rem;
+  background: var(--sky);
+  animation: aurora-b 32s var(--ease-editorial, ease-in-out) infinite alternate;
+}
+
+@keyframes aurora-a {
+  to {
+    transform: translate3d(9rem, 5rem, 0) scale(1.18);
+  }
+}
+
+@keyframes aurora-b {
+  to {
+    transform: translate3d(-8rem, -6rem, 0) scale(1.12);
+  }
+}
+
+/* The status pill above the headline. */
+.availability-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-pill);
+  border: var(--outline-w) solid var(--rule-strong);
+  background: var(--paper-raised);
+  font-family: var(--font-mono);
+  font-size: var(--text-meta);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* The frosted panels. A heavier blur and a brighter inner edge than `.glass`,
+   because these sit directly over the aurora rather than over paper. */
+.contact-panel {
+  position: relative;
+  border-radius: var(--radius-card);
+  border: var(--outline-w) solid var(--rule-strong);
+  background: var(--paper-raised);
+  backdrop-filter: blur(28px) saturate(170%);
+  -webkit-backdrop-filter: blur(28px) saturate(170%);
+  box-shadow: inset 0 1px 0 0 var(--edge-light), var(--shadow-panel);
+  padding: 1.75rem 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .contact-panel {
+    padding: 2.5rem;
+  }
+}
+
+.contact-panel-sent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.contact-sent-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 999px;
+  border: var(--outline-w) solid var(--outline);
+  background: var(--mint);
+  color: #16150f;
+  box-shadow: 3px 3px 0 0 var(--outline);
+}
+
+/* ── Fields ─────────────────────────────────────────────────────────────────
+   The floating label rides on `:placeholder-shown`, which is why every control
+   carries `placeholder=" "`. Empty ⇒ the placeholder is showing ⇒ the label
+   sits over the field; focused or filled ⇒ it lifts to the top edge. No JS. */
+.field {
+  position: relative;
+}
+
+.field-control {
+  width: 100%;
+  border-radius: calc(var(--radius-card) * 0.6);
+  border: var(--outline-w) solid var(--rule-strong);
+  background: var(--paper-sunk);
+  color: var(--ink);
+  padding: 1.5rem 1rem 0.625rem;
+  font: inherit;
+  line-height: 1.5;
+  transition: border-color 220ms linear, background-color 220ms linear,
+    box-shadow 220ms linear;
+}
+
+textarea.field-control {
+  padding-top: 1.75rem;
+  resize: vertical;
+  min-height: 8rem;
+}
+
+.field-control:hover {
+  border-color: var(--outline);
+}
+
+.field-control:focus {
+  outline: none;
+  border-color: var(--outline);
+  background: var(--paper-raised);
+  /* A ring rather than a colour change alone — SC 1.4.11 wants a non-colour
+     cue for the focused state, and the offset ring survives high contrast. */
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.field-label {
+  position: absolute;
+  left: 1rem;
+  top: 1.0625rem;
+  color: var(--ink-faint);
+  font-size: 1rem;
+  line-height: 1;
+  pointer-events: none;
+  transform-origin: left top;
+  transition: transform 200ms var(--ease-spring), color 200ms linear;
+}
+
+/* Lifted: focused, or holding a value. `:not(:placeholder-shown)` is the
+   "has a value" test — `:valid` would also match an empty optional field. */
+.field-control:focus + .field-label,
+.field-control:not(:placeholder-shown) + .field-label {
+  transform: translateY(-0.6875rem) scale(0.72);
+  color: var(--ink-muted);
+}
+
+.field[data-invalid] .field-control {
+  border-color: var(--coral);
+}
+
+.field[data-invalid] .field-control:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--coral) 35%, transparent);
+}
+
+.field-error {
+  min-height: 1.25rem;
+  margin-top: 0.4375rem;
+  padding-left: 0.125rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-meta);
+  letter-spacing: 0.04em;
+  color: #7a2318;
+}
+
+/* ── Contact method cards ──────────────────────────────────────────────── */
+.method-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  overflow: hidden;
+  padding: 1rem 1.125rem;
+  border-radius: calc(var(--radius-card) * 0.75);
+  border: var(--outline-w) solid var(--rule-strong);
+  background: var(--paper-raised);
+  transition: transform 320ms var(--ease-spring),
+    border-color 320ms linear, box-shadow 320ms var(--ease-spring);
+}
+
+.method-card:hover {
+  transform: translate3d(0, -3px, 0);
+  border-color: var(--outline);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.14);
+}
+
+/* The card's tone, bloomed from behind the icon tile. Sits under the content
+   because the card's own background is translucent. */
+.method-glow {
+  position: absolute;
+  left: -2rem;
+  top: 50%;
+  width: 11rem;
+  height: 11rem;
+  translate: 0 -50%;
+  border-radius: 50%;
+  background: var(--tone);
+  filter: blur(48px);
+  opacity: 0;
+  transition: opacity 380ms linear;
+  pointer-events: none;
+}
+
+.method-card:hover .method-glow {
+  opacity: 0.4;
+}
+
+.method-tile {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex-shrink: 0;
+  border-radius: calc(var(--radius-card) * 0.5);
+  border: var(--outline-w) solid var(--outline);
+  background: var(--tone);
+  color: #fbf8f2;
+  transition: transform 320ms var(--ease-spring);
+}
+
+.method-card:hover .method-tile {
+  transform: rotate(-6deg) scale(1.06);
+}
+
+.method-card > *:not(.method-glow) {
+  position: relative;
+  z-index: 1;
+}
+
+.method-arrow {
+  transition: transform 320ms var(--ease-spring), color 320ms linear;
+}
+
+.method-card:hover .method-arrow {
+  transform: translate3d(3px, -3px, 0);
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-aurora::before,
+  .contact-aurora::after {
+    animation: none;
+  }
+  .method-card:hover,
+  .method-card:hover .method-tile,
+  .method-card:hover .method-arrow {
+    transform: none;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   COMPONENTS
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  /*
+   * ── The work showcase ──────────────────────────────────────────────────
+   *
+   * Every rule below is scoped to `.showcase` and driven by ONE hover on the
+   * card, so a project responds as a single object rather than as six elements
+   * that each noticed the cursor separately. That difference is most of what
+   * separates "designed" from "has hover effects".
+   *
+   * Each project sets `--tone` to its own colour from the bright fill set. The
+   * glow, the rule, the index numeral and the plate all read it, so adding a
+   * project means picking one value, not editing five rules.
+   *
+   * Everything animated here is `transform`, `opacity`, or `filter` on an
+   * element that is already promoted — no width, top, or margin transitions,
+   * so hovering a card never triggers layout.
+   */
+
+  /* The colour bloom behind the device frame. Sits under everything, blurred
+     far past its own box, and swells on hover. This is the whole "lighting"
+     effect — one element, no images, no blend modes. */
+  .showcase-glow {
+    position: absolute;
+    /* NEGATIVE insets. The device frame is opaque, so a glow contained inside
+       its box is a glow nobody ever sees — it has to bloom past the frame's
+       edges to register at all. */
+    inset: -14% -10%;
+    border-radius: 50%;
+    background: radial-gradient(circle, var(--tone) 0%, transparent 68%);
+    filter: blur(58px);
+    opacity: 0.4;
+    transform: scale(0.92);
+    transition: opacity 700ms var(--ease-editorial),
+      transform 700ms var(--ease-editorial);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .showcase:hover .showcase-glow,
+  .showcase:focus-within .showcase-glow {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+
+  /*
+   * The oversized index numeral behind the frame.
+   *
+   * Outlined rather than filled: a solid numeral at this size competes with the
+   * project title for the same job, where a hairline outline reads as a
+   * printed page number — present, structural, and quiet. `-webkit-text-stroke`
+   * is the only way to get a true outline on live text; it has been supported
+   * everywhere for years and degrades to a filled numeral if it ever is not,
+   * which is why the fill is set to `transparent` separately rather than relied
+   * upon.
+   */
+  .showcase-index {
+    font-family: var(--font-display);
+    font-weight: 800;
+    line-height: 0.78;
+    letter-spacing: -0.04em;
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--rule-strong);
+    transition: -webkit-text-stroke-color 600ms var(--ease-editorial),
+      transform 800ms var(--ease-editorial);
+    pointer-events: none;
+    user-select: none;
+  }
+  .showcase:hover .showcase-index {
+    -webkit-text-stroke-color: var(--tone);
+    transform: translateY(-0.06em);
+  }
+
+  /* The frame itself: lifts and settles back a touch flatter on hover. The
+     rotation is tiny on purpose — past about a degree it stops reading as a
+     photograph on a desk and starts reading as a mistake. */
+  .showcase-frame {
+    transition: transform 700ms var(--ease-editorial),
+      box-shadow 700ms var(--ease-editorial);
+    box-shadow: var(--shadow-panel);
+  }
+  .showcase:hover .showcase-frame,
+  .showcase:focus-within .showcase-frame {
+    transform: translateY(-0.75rem) rotate(-0.5deg);
+    box-shadow: var(--shadow-lift);
+  }
+
+  /* Title underline, drawn in the project's own tone. Grows from the left on
+     hover — `background-size` on a gradient rather than a border, so it
+     animates without reserving space or shifting the baseline. */
+  .showcase-title {
+    background-image: linear-gradient(var(--tone), var(--tone));
+    background-repeat: no-repeat;
+    background-position: 0 92%;
+    background-size: 0% 3px;
+    transition: background-size 600ms var(--ease-editorial);
+  }
+  .showcase:hover .showcase-title {
+    background-size: 100% 3px;
+  }
+
+  /* The row rule picks up the project's colour as the card is engaged, which
+     is what ties the divider to the composition instead of leaving it as a
+     leftover hairline. */
+  .showcase-rule {
+    transition: background-color 600ms var(--ease-editorial);
+    background-color: var(--rule);
+  }
+  .showcase:hover .showcase-rule {
+    background-color: var(--tone);
+  }
+
+  /*
+   * Makes one link cover its whole card.
+   *
+   * The card is NOT a link. Wrapping the composition in an anchor would nest
+   * the "Visit live" link inside it, which is invalid HTML and gives a screen
+   * reader one control with two destinations. Instead the title link spreads an
+   * invisible ::after over the card, and any control that must stay separately
+   * clickable is lifted above it with `relative z-10`.
+   */
+  .stretch-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .showcase:hover .showcase-frame,
+    .showcase:focus-within .showcase-frame,
+    .showcase:hover .showcase-index {
+      transform: none;
+    }
+  }
+  :root[data-motion="reduced"] .showcase:hover .showcase-frame,
+  :root[data-motion="reduced"] .showcase:focus-within .showcase-frame,
+  :root[data-motion="reduced"] .showcase:hover .showcase-index {
+    transform: none;
+  }
+
+  /*
+   * The assistant mark: a live icon.
+   *
+   * The job is to say "this thing is listening" without becoming a distraction
+   * on a page the visitor is trying to read. Three layers, all behind a solid
+   * glyph:
+   *
+   *   1. `::before` — a conic gradient sweeping green into cyan, blurred into a
+   *      halo and rotated once every 7s. The rotation is what reads as
+   *      *thinking*; a symmetric glow would only read as *highlighted*.
+   *   2. `::after`  — a soft radial core that breathes on a slower, prime-ish
+   *      4.3s cycle. Two loops that never re-sync are what stop the whole thing
+   *      settling into an obvious repeating beat.
+   *   3. the glyph itself, painted in solid `--ai` on top, so contrast is
+   *      always measured against a colour the halo cannot change.
+   *
+   * Cost: both pseudo-elements animate `transform` and `opacity` only, which
+   * the compositor owns. The blur is applied once when the layer is rasterised
+   * and is not re-computed per frame — rotating a pre-blurred texture is close
+   * to free. Nothing here triggers layout or paint on the main thread.
+   *
+   * Opacities are deliberately low. At the levels below the halo tints the
+   * paper behind the glyph by under 2% of the way to the glow colour, so the
+   * measured icon contrast is unchanged from the flat token in both themes.
+   */
+  .ai-mark {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ai);
+    /* Contains the halo so it cannot inflate the button's box. */
+    isolation: isolate;
+  }
+
+  .ai-mark::before,
+  .ai-mark::after {
+    content: "";
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .ai-mark::before {
+    inset: -55%;
+    /*
+     * Two lobes 180deg apart, not one.
+     *
+     * A single arc puts the whole glow in one quadrant at any instant, and a
+     * blurred blob sitting off one shoulder of the glyph reads as the icon
+     * being badly centred rather than as anything rotating. An opposed pair
+     * keeps the mass balanced around the mark while the sweep still travels,
+     * so the motion is legible and the icon stays visually centred.
+     */
+    background: conic-gradient(
+      from 0deg,
+      transparent 0deg,
+      var(--ai-glow-a) 55deg,
+      var(--ai-glow-b) 125deg,
+      transparent 180deg,
+      transparent 200deg,
+      var(--ai-glow-b) 250deg,
+      var(--ai-glow-a) 315deg,
+      transparent 360deg
+    );
+    filter: blur(7px);
+    opacity: var(--ai-halo);
+    animation: ai-orbit 7s linear infinite;
+    will-change: transform;
+  }
+
+  .ai-mark::after {
+    inset: -35%;
+    background: radial-gradient(
+      circle,
+      var(--ai-glow-a) 0%,
+      transparent 68%
+    );
+    opacity: var(--ai-core);
+    animation: ai-breathe 4.3s ease-in-out infinite;
+  }
+
+  /* Pressing into the assistant brightens the halo rather than moving it — the
+     button itself does not travel, so a positional response would be a lie. */
+  .group:hover .ai-mark::before {
+    opacity: calc(var(--ai-halo) * 1.45);
+  }
+  .group:hover .ai-mark::after {
+    opacity: calc(var(--ai-core) * 1.5);
+  }
+  .ai-mark::before,
+  .ai-mark::after {
+    transition: opacity 400ms var(--ease-editorial);
+  }
+
+  /*
+   * Both keyframes end where they start. Under reduced motion the global rule
+   * collapses the duration and pins the iteration count to 1, which lands the
+   * element on its 100% frame — so the resting state has to BE the design, not
+   * the far end of a swing. Here that means a full turn and a return to the
+   * base scale, leaving a static halo that still looks deliberate.
+   */
+  @keyframes ai-orbit {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes ai-breathe {
+    0%,
+    100% {
+      transform: scale(0.92);
+      opacity: calc(var(--ai-core) * 0.8);
+    }
+    50% {
+      transform: scale(1.12);
+      opacity: calc(var(--ai-core) * 1.45);
+    }
+  }
+
+  /*
+   * Full-bleed colour band with a curved lip.
+   *
+   * The elliptical radius (`100% 4rem`) is what produces the wide shallow arc
+   * in the reference rather than a rounded rectangle — the horizontal radius
+   * is the full width of the block, the vertical one only a few rem. A
+   * symmetric `border-radius: 4rem` would give tight corners and lose the
+   * whole gesture.
+   */
+  /*
+   * `--radius-lip`, not `--radius-block`. The section arc and a card corner are
+   * different jobs: 2.5rem is right on a card and far too shallow across 1440px
+   * of section, where it reads as a barely-bent straight line. This is fluid so
+   * the sweep keeps the same visual depth from phone to desktop instead of
+   * flattening out as the viewport widens.
+   */
+  .block-curve-top {
+    border-start-start-radius: 100% var(--radius-lip);
+    border-start-end-radius: 100% var(--radius-lip);
+  }
+  /*
+   * Concave bottom — the block is scooped UP into itself rather than bulging
+   * down.
+   *
+   * `border-radius` cannot express this. It only ever removes material at the
+   * corners, so a bottom radius bows the edge outward; there is no negative
+   * radius. A radial-gradient mask can: the ellipse is centred exactly on the
+   * bottom edge, so only its upper half lies inside the block, carving away
+   * most at the centre and tapering to nothing at the two corners.
+   *
+   * The horizontal radius is 50% for a reason — that puts the ellipse's own
+   * left and right extremes precisely on the block's corners, so the arc runs
+   * out to zero exactly where the straight edge would resume. Anything
+   * narrower ends the curve early and leaves a visible kink partway along the
+   * edge.
+   *
+   * The hard stop at 99.5%/100% is what makes it a shape rather than a fade —
+   * a gradient mask with soft stops would feather the edge instead of cutting
+   * it.
+   *
+   * The scoop is only `--radius-lip` deep (2.25–5rem) while every block
+   * carries `py-section` (3.75–8rem), so it never bites into content. Give a
+   * block less bottom padding than the lip depth and it would.
+   */
+  .block-curve-bottom {
+    -webkit-mask-image: radial-gradient(
+      ellipse 50% var(--radius-lip) at 50% 100%,
+      #0000 99.5%,
+      #000 100%
+    );
+    mask-image: radial-gradient(
+      ellipse 50% var(--radius-lip) at 50% 100%,
+      #0000 99.5%,
+      #000 100%
+    );
+  }
+
+  /*
+   * The button system.
+   *
+   * `.btn` is the sticker shape: fat pill, thick outline, and a hard offset
+   * shadow instead of a soft one. On press the element moves into its own
+   * shadow, which is the tactile bit — a soft blurred shadow cannot do that
+   * because there is no defined surface to land on.
+   */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-radius: var(--radius-pill);
+    border: var(--outline-w) solid var(--outline);
+    padding: 0.875rem 1.5rem;
+    font-weight: 600;
+    line-height: 1;
+    box-shadow: 3px 3px 0 0 var(--outline);
+    transition: transform 220ms var(--ease-spring),
+      box-shadow 220ms var(--ease-spring), background-color 260ms linear,
+      color 260ms linear;
+  }
+  .btn:hover {
+    transform: translate3d(-1px, -1px, 0);
+    box-shadow: 5px 5px 0 0 var(--outline);
+  }
+  .btn:active {
+    transform: translate3d(3px, 3px, 0);
+    box-shadow: 0 0 0 0 var(--outline);
+  }
+  .btn-primary {
+    background: var(--violet);
+    color: #16150f;
+  }
+  .btn-accent {
+    background: var(--coral);
+    color: #16150f;
+  }
+  .btn-plain {
+    background: var(--paper-raised);
+    color: var(--ink);
+  }
+  /* The one oversized button on the site, for the one action the Contact
+     section exists to get. Scales the offset shadow with it — at 3px the
+     sticker edge reads as a hairline on a button this size. */
+  .btn-lg {
+    padding: 1.125rem 2rem;
+    font-size: 1.0625rem;
+    box-shadow: 4px 4px 0 0 var(--outline);
+  }
+  .btn-lg:hover {
+    box-shadow: 6px 6px 0 0 var(--outline);
+  }
+  .btn-lg:active {
+    box-shadow: 0 0 0 0 var(--outline);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .btn:hover,
+    .btn:active {
+      transform: none;
+    }
+  }
+  :root[data-motion="reduced"] .btn:hover,
+  :root[data-motion="reduced"] .btn:active {
+    transform: none;
+  }
+
+  /* Decorative sticker shapes scattered behind content. Pointer-events are
+     off so they can overlap freely without eating clicks. */
+  .sticker {
+    position: absolute;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /*
+   * Film grain. A static SVG turbulence tile at very low opacity, over the
+   * whole viewport. This is the single highest-leverage detail in the theme:
+   * it stops large flat fields from reading as "default browser background"
+   * and gives both palettes a printed, physical quality.
+   */
+  .grain {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: var(--grain-opacity);
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* Slow-moving light behind the hero. Three pools, each barely visible;
+     together they keep the background from ever being a flat rectangle. */
+  .aurora {
+    position: absolute;
+    inset: -25% -10% auto -10%;
+    height: 130%;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+    mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 100%);
+  }
+  .aurora span {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    animation: drift var(--dur, 26s) ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+  }
+  .aurora span:nth-child(1) {
+    inset: 4% auto auto 8%;
+    width: 46vw;
+    height: 46vw;
+    background: var(--aurora-1);
+  }
+  .aurora span:nth-child(2) {
+    inset: 22% 6% auto auto;
+    width: 40vw;
+    height: 40vw;
+    background: var(--aurora-2);
+    --dur: 34s;
+    --delay: -8s;
+  }
+  .aurora span:nth-child(3) {
+    inset: auto auto 6% 34%;
+    width: 34vw;
+    height: 34vw;
+    background: var(--aurora-3);
+    --dur: 30s;
+    --delay: -16s;
+  }
+
+  /* Availability indicator: a solid dot with an expanding halo behind it. */
+  .pulse {
+    position: relative;
+    display: inline-flex;
+    width: 0.5rem;
+    height: 0.5rem;
+    flex: none;
+  }
+  .pulse::before,
+  .pulse::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    background: var(--accent);
+  }
+  .pulse::before {
+    animation: halo 2.6s var(--ease-editorial) infinite;
+  }
+  .pulse::after {
+    animation: breathe 2.6s ease-in-out infinite;
+  }
+
+  /* Infinite ticker. Content is duplicated in the component, so translating
+     -50% lands exactly on the seam. */
+  .marquee {
+    display: flex;
+    width: max-content;
+    animation: marquee var(--speed, 48s) linear infinite;
+  }
+  .marquee:hover,
+  .marquee:focus-within {
+    animation-play-state: paused;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .marquee {
+      animation: none;
+      transform: none;
+    }
+  }
+
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--paper-sunk) 25%,
+      var(--rule) 50%,
+      var(--paper-sunk) 75%
+    );
+    background-size: 220% 100%;
+    animation: shimmer 1.6s linear infinite;
+  }
+
+  /*
+   * Parallax via scroll-driven animation — the whole effect runs off the main
+   * thread, so it cannot cause scroll jank. Progressively enhanced: without
+   * support the element simply sits still, which is a fine resting state.
+   */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      [data-parallax] {
+        animation: parallax linear both;
+        animation-timeline: view();
+        animation-range: entry 0% exit 100%;
+      }
+      @keyframes parallax {
+        from {
+          transform: translate3d(0, calc(var(--parallax, 6) * 1vh), 0);
+        }
+        to {
+          transform: translate3d(0, calc(var(--parallax, 6) * -1vh), 0);
+        }
+      }
+    }
+  }
+  :root[data-motion="reduced"] [data-parallax] {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  /* Cursor-follow preview in the work index. The trailing lag comes from
+     transitioning transform while rAF rewrites --px / --py. */
+  .work-preview {
+    transition: transform 480ms var(--ease-editorial), opacity 300ms linear;
+    will-change: transform;
+  }
+
+  /* Inline thumbnails are the accessible counterpart to the floating preview:
+     shown wherever hover cannot work, and on keyboard focus. */
+  .work-thumb {
+    display: none;
+  }
+  @media (hover: none), (prefers-reduced-motion: reduce) {
+    .work-preview {
+      display: none;
+    }
+    .work-thumb {
+      display: block;
+    }
+  }
+  .work-row:focus-within .work-thumb {
+    display: block;
+  }
+
+  /*
+   * Custom cursor. Rendered only on fine pointers; the OS cursor is never
+   * hidden, so this is additive — if the component fails, nothing is lost.
+   */
+  .cursor-ring {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 300;
+    pointer-events: none;
+    width: 2rem;
+    height: 2rem;
+    margin: -1rem 0 0 -1rem;
+    border: 1px solid var(--accent-line);
+    border-radius: 999px;
+    mix-blend-mode: difference;
+    transform: translate3d(var(--cx, -100px), var(--cy, -100px), 0)
+      scale(var(--cs, 1));
+    transition: transform 220ms var(--ease-editorial), opacity 200ms linear,
+      width 260ms var(--ease-spring), height 260ms var(--ease-spring);
+  }
+  @media (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
+    .cursor-ring {
+      display: none;
+    }
+  }
+
+  /* Command palette + overlays. */
+  .overlay-backdrop {
+    animation: overlay-in 220ms var(--ease-editorial) both;
+    background: color-mix(in oklab, var(--paper-sunk) 72%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .overlay-panel {
+    animation: panel-in 300ms var(--ease-spring) both;
+  }
+
+  /* Reading mode: strips ornament and widens the measure for long-form text. */
+  :root[data-reading="on"] .aurora,
+  :root[data-reading="on"] .grain,
+  :root[data-reading="on"] .cursor-ring,
+  :root[data-reading="on"] .work-preview {
+    display: none;
+  }
+  :root[data-reading="on"] body {
+    font-size: 1.125rem;
+    line-height: 1.8;
+  }
+  :root[data-reading="on"] .reading-hide {
+    display: none;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   SCREENSHOT CAROUSEL — App Store showcase
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.screenshot-carousel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.carousel-viewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  max-width: 320px;
+  margin: 0 auto;
+  background: var(--paper-surface);
+  border-radius: 2.5rem;
+  border: 8px solid var(--paper-raised);
+  overflow: hidden;
+  box-shadow:
+    0 20px 60px rgb(0 0 0 / 0.15),
+    inset 0 1px 0 rgb(255 255 255 / 0.1);
+}
+
+.carousel-track {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  transition: transform 600ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+}
+
+.carousel-slide {
+  min-width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.screenshot-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.carousel-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: currentColor;
+  cursor: pointer;
+  transition: all 300ms ease-spring;
+  z-index: 10;
+}
+
+.carousel-nav:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-nav-prev {
+  left: 1rem;
+}
+
+.carousel-nav-next {
+  right: 1rem;
+}
+
+@media (max-width: 768px) {
+  .carousel-viewport {
+    max-width: 100%;
+  }
+
+  .carousel-nav {
+    width: 2rem;
+    height: 2rem;
+  }
+}
+
+/* Thumbnail indicators */
+.carousel-indicators {
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding: 0 0.5rem;
+  scroll-behavior: smooth;
+}
+
+.carousel-indicator {
+  flex: 0 0 auto;
+  width: 60px;
+  height: 120px;
+  border-radius: 0.5rem;
+  border: 2px solid transparent;
+  padding: 0;
+  cursor: pointer;
+  overflow: hidden;
+  background: var(--paper-surface);
+  transition: all 200ms ease;
+  opacity: 0.6;
+}
+
+.carousel-indicator:hover {
+  opacity: 0.8;
+}
+
+.carousel-indicator.active {
+  border-color: var(--accent);
+  opacity: 1;
+}
+
+.indicator-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.carousel-counter {
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PROJECT CARD — Premium showcase
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.project-card {
+  position: relative;
+  background: linear-gradient(135deg, var(--paper-raised), var(--paper-surface));
+  border: 1px solid var(--edge-subtle);
+  border-radius: 1.5rem;
+  padding: 2rem;
+  overflow: hidden;
+}
+
+.project-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.project-card-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.project-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.project-number {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink-faint);
+  margin-bottom: 0.75rem;
+}
+
+.project-title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--ink);
+  margin-bottom: 0.5rem;
+}
+
+.project-role {
+  font-size: 0.875rem;
+  color: var(--ink-muted);
+  font-weight: 500;
+}
+
+.project-link-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.75rem;
+  background: var(--accent);
+  color: #fff;
+  transition: all 200ms ease;
+}
+
+.project-link-badge:hover {
+  transform: translate(2px, -2px);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+}
+
+.project-summary {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--ink-muted);
+}
+
+.project-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.stack-tag {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: var(--paper-surface);
+  color: var(--ink);
+  border: 1px solid var(--edge-subtle);
+  transition: all 200ms ease;
+}
+
+.stack-tag:hover {
+  border-color: var(--accent);
+  background: var(--paper-raised);
+  transform: translateY(-1px);
+}
+
+.project-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--edge-subtle);
+}
+
+.meta-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.meta-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink-faint);
+}
+
+.meta-value {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.project-card-border {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--accent), var(--sky));
+  opacity: 0;
+  transition: opacity 300ms ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.project-card:hover .project-card-border {
+  opacity: 0.1;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PROJECT SHOWCASE GRID — Responsive layout
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.project-showcase {
+  width: 100%;
+}
+
+.showcase-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3rem;
+  padding: 3rem 0;
+}
+
+@media (min-width: 1024px) {
+  .showcase-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+  }
+}
+
+.showcase-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.showcase-carousel {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .showcase-grid {
+    gap: 2rem;
+  }
+
+  .project-card {
+    padding: 1.5rem;
+  }
+
+  .project-title {
+    font-size: 1.5rem;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PRINT — the CV path. A recruiter printing this should get a clean document.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@media print {
+  .grain,
+  .aurora,
+  .cursor-ring,
+  .work-preview,
+  header,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff;
+    color: #000;
+  }
+  [data-reveal] .reveal-item {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.75em;
+    color: #555;
+  }
 }
