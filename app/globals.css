@@ -1998,21 +1998,32 @@ textarea.field-control {
   flex-direction: column;
   gap: 1.5rem;
   width: 100%;
+  max-width: 100%;
 }
 
 .carousel-viewport {
   position: relative;
   width: 100%;
   aspect-ratio: 9 / 16;
-  max-width: 320px;
-  margin: 0 auto;
   background: var(--paper-surface);
   border-radius: 2.5rem;
-  border: 8px solid var(--paper-raised);
+  border: 10px solid var(--paper-raised);
   overflow: hidden;
   box-shadow:
     0 20px 60px rgb(0 0 0 / 0.15),
     inset 0 1px 0 rgb(255 255 255 / 0.1);
+}
+
+@media (max-width: 1024px) {
+  .carousel-viewport {
+    border-width: 8px;
+  }
+}
+
+@media (max-width: 768px) {
+  .carousel-viewport {
+    border-width: 6px;
+  }
 }
 
 .carousel-track {
@@ -2027,15 +2038,17 @@ textarea.field-control {
   min-width: 100%;
   height: 100%;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
+  padding: 1.5rem 0;
+  overflow-y: auto;
 }
 
 .screenshot-image {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
+  height: auto;
+  object-fit: contain;
+  object-position: top center;
 }
 
 .carousel-nav {
@@ -2087,8 +2100,9 @@ textarea.field-control {
   display: flex;
   gap: 0.75rem;
   overflow-x: auto;
-  padding: 0 0.5rem;
+  padding: 0;
   scroll-behavior: smooth;
+  width: 100%;
 }
 
 .carousel-indicator {
