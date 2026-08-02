@@ -233,8 +233,8 @@ export const projects: readonly Project[] = [
     href: "https://apps.apple.com/ng/app/looking-to-hire-job-search/id6752956415",
     repo: null,
     image: {
-      src: "https://is1-ssl.mzstatic.com/image/thumb/Features116/v4/6b/26/61/6b266131-b03c-10b8-5640-24ed75a1b527/9020ae77-3d4e-48fc-a546-8895dffe962b.png",
-      alt: "Looking to Hire app showcase",
+      src: "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/e2/d5/2e/e2d52eee-74e4-5e2c-03b0-bef31f9bee20/Simulator_Screenshot_-_iPhone_16e_-_2025-12-03_at_11.41.04.png/600x1300bb.png",
+      alt: "Looking to Hire app - Home screen with job recommendations",
     },
     context:
       "The job market in Nigeria and across Africa is fragmented, with job seekers struggling to find the right opportunities and employers unable to discover qualified talent. Traditional job boards lack personalization and real-time communication, creating friction in both hiring and application workflows.",
