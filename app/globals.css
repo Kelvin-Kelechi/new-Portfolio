@@ -1996,34 +1996,19 @@ textarea.field-control {
 .screenshot-carousel {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 0;
   width: 100%;
+  height: 100%;
   max-width: 100%;
+  background: var(--paper-surface);
 }
 
 .carousel-viewport {
   position: relative;
   width: 100%;
-  aspect-ratio: 9 / 16;
-  background: var(--paper-surface);
-  border-radius: 2.5rem;
-  border: 10px solid var(--paper-raised);
+  flex: 1;
   overflow: hidden;
-  box-shadow:
-    0 20px 60px rgb(0 0 0 / 0.15),
-    inset 0 1px 0 rgb(255 255 255 / 0.1);
-}
-
-@media (max-width: 1024px) {
-  .carousel-viewport {
-    border-width: 8px;
-  }
-}
-
-@media (max-width: 768px) {
-  .carousel-viewport {
-    border-width: 6px;
-  }
+  background: var(--paper-surface);
 }
 
 .carousel-track {
@@ -2038,9 +2023,9 @@ textarea.field-control {
   min-width: 100%;
   height: 100%;
   display: flex;
-  align-items: stretch;
+  align-items: center;
   justify-content: center;
-  padding: 1.5rem 0;
+  padding: 0;
   overflow-y: auto;
 }
 
@@ -2095,14 +2080,22 @@ textarea.field-control {
   }
 }
 
-/* Thumbnail indicators */
+/* Thumbnail indicators - positioned below carousel on mobile/desktop */
 .carousel-indicators {
-  display: flex;
+  display: none;
   gap: 0.75rem;
   overflow-x: auto;
-  padding: 0;
+  padding: 1rem 0.5rem 0;
   scroll-behavior: smooth;
   width: 100%;
+  max-height: 140px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .carousel-indicators {
+    display: flex;
+  }
 }
 
 .carousel-indicator {
@@ -2135,11 +2128,20 @@ textarea.field-control {
 }
 
 .carousel-counter {
+  display: none;
   text-align: center;
   font-size: 0.875rem;
   color: var(--ink-muted);
   font-family: var(--font-mono);
   font-weight: 500;
+  padding-top: 0.75rem;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .carousel-counter {
+    display: block;
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════

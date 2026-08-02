@@ -85,7 +85,7 @@ export default function ProjectShowcase({
     >
       <div className="showcase-rule h-px w-full" />
 
-      <div className="grid grid-cols-12 items-start gap-x-gutter gap-y-10 py-band lg:gap-y-0">
+      <div className="grid grid-cols-12 items-stretch gap-x-gutter gap-y-10 py-band lg:gap-y-0">
         {/* ── The visual (carousel for mobile, device frame for others) ───── */}
         <div
           className={`relative col-span-12 lg:col-span-6 ${
@@ -109,11 +109,19 @@ export default function ProjectShowcase({
             className="relative z-[1]"
           >
             {kind === "phone" ? (
-              /* Mobile projects: show carousel with screenshots */
-              <ScreenshotCarousel
-                screenshots={SCREENSHOTS}
-                projectName={project.title}
-              />
+              /* Mobile projects: show carousel in phone frame */
+              <Tilt max={4} className="mx-auto max-w-[320px]">
+                <div className="showcase-frame rounded-[inherit]">
+                  <DeviceFrame kind="phone">
+                    <div className="aspect-[9/16]">
+                      <ScreenshotCarousel
+                        screenshots={SCREENSHOTS}
+                        projectName={project.title}
+                      />
+                    </div>
+                  </DeviceFrame>
+                </div>
+              </Tilt>
             ) : (
               /* Browser projects: show device frame */
               <Tilt max={4}>
@@ -221,7 +229,7 @@ export default function ProjectShowcase({
             ))}
           </ul>
 
-          <div className="mt-9 flex flex-col gap-8 pb-8">
+          <div className="mt-9 flex flex-col gap-8 pb-16">
             <div className="flex flex-wrap items-center gap-6">
               {/* Visual affordance only — the real link is the stretched title,
                   and a second anchor to the same place would make a keyboard user
