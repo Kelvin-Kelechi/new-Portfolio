@@ -80,13 +80,31 @@ export default function AccordionCard({
         {alwaysOpen ? (
           /* A plain header, not a button. There is no state to toggle, and a
              control that cannot change anything is the kind of thing that
-             makes a screen reader announce a lie. */
+             makes a screen reader announce a lie.
+
+             No overlap clearance needed: this is the last sheet, so nothing is
+             pulled up over it and its own copy follows immediately below. */
           <div className="px-5 pt-9 md:px-12 md:pt-12">{heading}</div>
         ) : (
           <button
             id={`${id}-trigger`}
             onClick={toggle}
-            className="w-full cursor-pointer px-5 py-8 text-left md:px-12 md:py-12"
+            /*
+             * Padding is asymmetric because the overlap is.
+             *
+             * The NEXT card is pulled up over this one by 44px (mobile) / 56px
+             * (desktop) — see <Accordion> — so the last 44/56px of this card is
+             * behind its neighbour. At the old symmetric `py-8`/`py-12` the
+             * bottom padding was smaller than that overlap, so the next sheet's
+             * top edge cut across the descenders of every collapsed title.
+             * Measured: 12px of overrun on mobile, 8px on desktop.
+             *
+             * `pb-` therefore has to be overlap + breathing room. `pt-` is
+             * matched to it so the collapsed band stays optically centred —
+             * nothing overlaps the top, but a band with 76px under the title
+             * and 32px over it reads as broken rather than as deliberate.
+             */
+            className="w-full cursor-pointer px-5 pb-[4.75rem] pt-8 text-left md:px-12 md:pb-[7rem] md:pt-12"
             aria-expanded={open}
             aria-controls={`${id}-content`}
           >
