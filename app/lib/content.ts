@@ -222,14 +222,14 @@ export const projects: readonly Project[] = [
     slug: "looking-to-hire",
     title: "Looking to Hire",
     year: "2025",
-    role: "iOS Engineer",
+    role: "Mobile Engineer",
     duration: "Ongoing",
     category: "Mobile",
     featured: true,
-    summary: "Smarter job matching and hiring platform for connecting talent and employers",
+    summary: "Smarter job matching and hiring platform for connecting talent and employers across iOS and Android",
     detail:
-      "A modern iOS job search and recruitment app connecting job seekers and employers. Features personalized recommendations, one-tap applications, secure in-app messaging, and profile management.",
-    stack: ["Swift", "iOS", "REST API", "Firebase", "CoreData"],
+      "A modern cross-platform job search and recruitment app connecting job seekers and employers. Available on both iOS and Android with personalized recommendations, one-tap applications, secure in-app messaging, and profile management.",
+    stack: ["Flutter", "Dart", "Node.js", "REST API", "Firebase", "Realtime Database"],
     href: "https://apps.apple.com/ng/app/looking-to-hire-job-search/id6752956415",
     repo: null,
     image: {
@@ -241,24 +241,28 @@ export const projects: readonly Project[] = [
     sections: [
       {
         heading: "Product Vision",
-        body: "Build a mobile-first job platform that modernizes talent discovery and recruitment. The platform needed to balance dual user needs: job seekers seeking personalized opportunities with one-tap application, and employers looking to hire qualified talent efficiently. Real-time messaging replaces email delays, and profile visibility creates mutual discovery.",
+        body: "Build a mobile-first job platform that modernizes talent discovery and recruitment across iOS and Android. The platform needed to balance dual user needs: job seekers seeking personalized opportunities with one-tap application, and employers looking to hire qualified talent efficiently. Real-time messaging replaces email delays, and profile visibility creates mutual discovery.",
       },
       {
         heading: "Core Features",
-        body: "Job seekers build professional profiles and upload resumes in minutes, discovering personalized job opportunities based on skills and experience. One-tap applications with application tracking, secure in-app messaging for direct employer communication, and saved jobs for later consideration. Employers browse qualified candidates, post jobs targeting specific skills, and communicate directly with applicants.",
+        body: "Job seekers build professional profiles and upload resumes in minutes, discovering personalized job opportunities based on skills and experience. One-tap applications with application tracking, secure in-app messaging for direct employer communication, and saved jobs for later consideration. Employers browse qualified candidates, post jobs targeting specific skills, and communicate directly with applicants. Cross-platform consistency ensures the same experience on iOS and Android.",
       },
       {
-        heading: "User Experience",
-        body: "Clean, intuitive iOS interface designed for mobile-first job hunting. Smooth navigation between job discovery, applications, messaging, and profile management. Push notifications keep users informed of new matches and messages. Optimized for both quick browsing during commutes and deep profile reviews.",
+        heading: "Technical Architecture",
+        body: "Single codebase Flutter application delivering native performance on both iOS and Android. Node.js backend handles job matching algorithms, real-time messaging, and user management. Firebase provides real-time database synchronization and push notifications. Offline-first architecture ensures core functionality works without connectivity, syncing when connection restores.",
       },
     ],
     architecture: [
-      "iOS · Swift with UIKit and modern concurrency",
-      "REST API · Job matching and user management endpoints",
-      "Firebase · Real-time messaging and push notifications",
-      "CoreData · Local profile and application caching",
+      "Flutter · Single codebase for iOS and Android",
+      "Node.js · Backend services for job matching and user management",
+      "Firebase · Real-time messaging, push notifications, database",
+      "REST API · Job recommendations and application tracking endpoints",
     ],
     challenges: [
+      {
+        problem: "Building a single codebase that delivers native performance and platform-specific UX on both iOS and Android without compromising quality.",
+        resolution: "Used Flutter with platform-specific channel calls for critical features, ensuring native performance while maintaining 90% code reuse across platforms.",
+      },
       {
         problem: "Real-time messaging at scale with unreliable connections in emerging markets required robust offline-to-online transitions.",
         resolution: "Implemented local message queuing with Firebase Realtime Database sync, ensuring messages persist locally and transmit when connectivity restores.",
@@ -266,10 +270,6 @@ export const projects: readonly Project[] = [
       {
         problem: "Job matching relevance required understanding both job requirements and candidate skills across varying profile completeness.",
         resolution: "Built progressive profiling where users unlock better matches as they complete their profiles, creating incentive for engagement while improving recommendation quality.",
-      },
-      {
-        problem: "Resume parsing from diverse formats and languages needed to extract meaningful job-matching signals.",
-        resolution: "Combined rule-based parsing for common formats with keyword extraction, falling back to user-guided tagging for ambiguous sections.",
       },
     ],
     metrics: [],
