@@ -222,14 +222,14 @@ export const projects: readonly Project[] = [
     slug: "looking-to-hire",
     title: "Looking to Hire",
     year: "2025",
-    role: "Mobile Engineer (Flutter)",
+    role: "iOS Engineer",
     duration: "Ongoing",
     category: "Mobile",
     featured: true,
     summary: "Smarter job matching and hiring platform for connecting talent and employers",
     detail:
-      "A modern iOS & Android job search and recruitment app connecting job seekers and employers. Features personalized recommendations, one-tap applications, secure in-app messaging, and profile management.",
-    stack: ["Flutter", "Dart", "REST API", "Firebase", "Node.js", "MongoDB"],
+      "A modern iOS job search and recruitment app connecting job seekers and employers. Features personalized recommendations, one-tap applications, secure in-app messaging, and profile management.",
+    stack: ["Swift", "iOS", "REST API", "Firebase", "CoreData"],
     href: "https://apps.apple.com/ng/app/looking-to-hire-job-search/id6752956415",
     repo: null,
     image: {
