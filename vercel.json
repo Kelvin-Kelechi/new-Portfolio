@@ -1,9 +1,4 @@
 {
   "buildCommand": "pnpm install --no-frozen-lockfile && next build --turbopack",
-  "env": {
-    "PNPM_HOME": "/pnpm",
-    "PATH": "$PNPM_HOME:$PATH"
-  },
-  "installCommand": "corepack enable pnpm && pnpm install",
-  "nodeVersion": "20.x"
+  "installCommand": "corepack enable pnpm && pnpm install"
 }
