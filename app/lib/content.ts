@@ -329,29 +329,29 @@ export const process: readonly ProcessStep[] = [
  */
 export const stack: readonly StackEntry[] = [
   { name: "TypeScript", ring: "Daily", domain: "Interface", note: "Strict mode or it isn't worth having." },
-  { name: "React", ring: "Daily", domain: "Interface" },
+  { name: "React", ring: "Daily", domain: "Interface", note: "State lives as close to where it is read as it can." },
   { name: "Next.js", ring: "Daily", domain: "Interface", note: "Server components by default; client where interaction demands it." },
   { name: "Tailwind CSS", ring: "Daily", domain: "Interface", note: "Tokens in the theme layer, never magic values in markup." },
-  { name: "Design systems", ring: "Fluent", domain: "Interface" },
+  { name: "Design systems", ring: "Fluent", domain: "Interface", note: "Build the vocabulary before the views, or the twentieth page costs ten times the second." },
   { name: "Framer Motion", ring: "Working", domain: "Interface", note: "Reached for only when CSS genuinely cannot." },
 
-  { name: "Node.js", ring: "Daily", domain: "Platform" },
+  { name: "Node.js", ring: "Daily", domain: "Platform", note: "Boring by choice — the interesting parts belong in the data model." },
   { name: "PostgreSQL", ring: "Daily", domain: "Platform", note: "Indexes and query plans before caches." },
-  { name: "REST & GraphQL", ring: "Fluent", domain: "Platform" },
-  { name: "Auth & sessions", ring: "Fluent", domain: "Platform" },
-  { name: "Redis", ring: "Fluent", domain: "Platform" },
-  { name: "Event-driven design", ring: "Working", domain: "Platform" },
+  { name: "REST & GraphQL", ring: "Fluent", domain: "Platform", note: "REST until a client genuinely needs to shape its own response." },
+  { name: "Auth & sessions", ring: "Fluent", domain: "Platform", note: "Enforced at the query layer, not the component layer." },
+  { name: "Redis", ring: "Fluent", domain: "Platform", note: "A cache is a bug you have not found yet — it earns its place or it goes." },
+  { name: "Event-driven design", ring: "Working", domain: "Platform", note: "Idempotent handlers, or replay will find you." },
 
-  { name: "React Native", ring: "Fluent", domain: "Mobile" },
-  { name: "Expo", ring: "Fluent", domain: "Mobile" },
+  { name: "React Native", ring: "Fluent", domain: "Mobile", note: "One codebase, but platform differences stop at the adapter." },
+  { name: "Expo", ring: "Fluent", domain: "Mobile", note: "Managed until a native module makes it dishonest." },
   { name: "Offline-first sync", ring: "Fluent", domain: "Mobile", note: "The queue and the conflict rule are the whole design." },
-  { name: "Flutter", ring: "Working", domain: "Mobile" },
+  { name: "Flutter", ring: "Working", domain: "Mobile", note: "Shipped Looking to Hire on it — native feel from a single codebase." },
 
-  { name: "Vercel", ring: "Daily", domain: "Operations" },
-  { name: "CI/CD", ring: "Fluent", domain: "Operations" },
+  { name: "Vercel", ring: "Daily", domain: "Operations", note: "Static where it can be, dynamic only where it must." },
+  { name: "CI/CD", ring: "Fluent", domain: "Operations", note: "If it is not automated it will not happen on the bad day." },
   { name: "Core Web Vitals", ring: "Fluent", domain: "Operations", note: "Field data over lab data, always." },
-  { name: "Observability", ring: "Working", domain: "Operations" },
-  { name: "Edge runtimes", ring: "Watching", domain: "Operations" },
+  { name: "Observability", ring: "Working", domain: "Operations", note: "Instrument before, instrument after, publish the delta." },
+  { name: "Edge runtimes", ring: "Watching", domain: "Operations", note: "Watching the cold-start maths, not yet convinced for stateful work." },
 ];
 
 export const stackRings: readonly StackRing[] = ["Daily", "Fluent", "Working", "Watching"];

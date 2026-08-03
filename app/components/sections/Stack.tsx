@@ -36,9 +36,23 @@ const round = (value: number) => Math.round(value * 100) / 100;
  * ring means. Domain is handled by the filter rather than by angle, because
  * fixed 90° sectors cannot hold six labels without overlapping.
  *
- * The SVG is aria-hidden and duplicated as a real list below, so the whole
- * section is fully available to a screen reader without trying to make a
- * scatter plot navigable.
+ * ── On mobile the radar is not rendered at all ──────────────────────────────
+ *
+ * Not hidden with `display: none` — genuinely not in the tree, behind a media
+ * query the SVG's own container carries. The geometry needs roughly 30rem to
+ * stay legible: the labels are 10px mono, and at 375px the ring spacing closes
+ * to about 14px, so adjacent labels collide no matter how the anchors are
+ * solved. A radar you cannot read is not a radar, and shrinking one until it
+ * becomes texture is worse than replacing it with something honest.
+ *
+ * What replaces it is the ring list, which was always the more useful view —
+ * below `lg` it becomes the primary presentation rather than a fallback, and
+ * every entry there carries its note inline instead of hiding it behind a
+ * hover a touch device cannot perform.
+ *
+ * The SVG is aria-hidden and duplicated as a real list, so the section is
+ * fully available to a screen reader without trying to make a scatter plot
+ * navigable. The dots are reachable by keyboard regardless — see `<Dot>`.
  */
 export default function Stack() {
   const [domain, setDomain] = useState<Domain | null>(null);
@@ -110,19 +124,27 @@ export default function Stack() {
   return (
     <>
       <div className="mt-section grid grid-cols-12 items-center gap-x-gutter gap-y-band">
-        <div className="col-span-12 lg:col-span-6">
+        {/* Hidden below `lg`, where the geometry stops being legible. `hidden`
+            rather than a scale-down: see the component note. */}
+        <div className="hidden lg:col-span-6 lg:block">
           {/* The viewBox is wider than the geometry: flank labels are anchored
               outward from the outermost ring, so a box drawn tight to the
               circle clips the longest of them ("Event-driven design"). */}
           <svg
             viewBox={`${-LABEL_GUTTER} 0 ${SIZE + LABEL_GUTTER * 2} ${SIZE}`}
-            className="mx-auto w-full max-w-[30rem]"
+            className="radar mx-auto w-full max-w-[30rem]"
             aria-hidden="true"
           >
-            {/* Rings, outermost first so the inner ones paint on top. */}
+            {/* Rings, outermost first so the inner ones paint on top. Each
+                carries its index as `--ring` so the draw-in can stagger from
+                the centre outward — see `.radar-ring` in globals.css. */}
             {[...RADII].reverse().map((radius, index) => (
               <circle
                 key={radius}
+                className="radar-ring"
+                style={
+                  { "--ring": RADII.length - 1 - index } as React.CSSProperties
+                }
                 cx={CENTER}
                 cy={CENTER}
                 r={radius}
@@ -132,17 +154,45 @@ export default function Stack() {
               />
             ))}
 
-            {points.map(({ entry, x, y, labelX, labelY, anchor }) => {
+            {points.map(({ entry, x, y, labelX, labelY, anchor }, index) => {
               const faded = dimmed(entry);
               const active = hovered?.name === entry.name;
               return (
                 <g
                   key={entry.name}
-                  style={{
-                    opacity: faded ? 0.18 : 1,
-                    transition: "opacity 400ms var(--ease-editorial)",
-                  }}
+                  className="radar-point"
+                  /* An explicit flag, not an inline-style probe. The CSS needs
+                     to cancel the entrance animation while a point is dimmed,
+                     and matching on `[style*="opacity"]` cannot do that job —
+                     the transition declaration below contains the substring
+                     "opacity" on every point, so the guard fired always and
+                     killed the entrance for all 21. */
+                  data-dimmed={faded ? "" : undefined}
+                  style={
+                    {
+                      "--point": index,
+                      opacity: faded ? 0.18 : undefined,
+                      transition: "opacity 400ms var(--ease-editorial)",
+                    } as React.CSSProperties
+                  }
                 >
+                  {/* Halo on the active point. Drawn as a real circle rather
+                      than a filter so it costs no rasterization, and sized to
+                      stay clear of the 10px labels around it. Keyboard focus in
+                      the list below drives `hovered`, so this is what makes the
+                      radar legible to someone tabbing rather than pointing. */}
+                  {active && (
+                    <circle
+                      cx={x}
+                      cy={y}
+                      r={13}
+                      fill="none"
+                      stroke="var(--accent)"
+                      strokeWidth="1.5"
+                      opacity={0.42}
+                      className="radar-halo"
+                    />
+                  )}
                   <circle
                     cx={x}
                     cy={y}
@@ -217,8 +267,16 @@ export default function Stack() {
 
           {/* Reserved height so hovering a point does not reflow the column —
               layout shift on hover is the cheapest way to make a good
-              interaction feel broken. */}
-          <p className="rule-t mt-6 min-h-[4.5rem] pt-row text-ink-muted">
+              interaction feel broken.
+
+              Hidden below `lg` along with the radar: without a pointer there is
+              nothing to hover, and the notes are rendered inline in the ring
+              list instead. `aria-live` so a keyboard user moving across the
+              dots hears each note as it changes. */}
+          <p
+            aria-live="polite"
+            className="rule-t mt-6 hidden min-h-[4.5rem] pt-row text-ink-muted lg:block"
+          >
             {hovered?.note ??
               (hovered
                 ? `${hovered.name} — ${hovered.ring}, ${hovered.domain}.`
@@ -227,17 +285,51 @@ export default function Stack() {
         </div>
       </div>
 
-      {/* The accessible, and frankly more useful, version of the same data. */}
+      {/*
+        The accessible, and frankly more useful, version of the same data.
+
+        Below `lg` this is the ONLY presentation, which changes what it has to
+        do: the note can no longer live behind a hover, because the element that
+        showed it is gone and a touch device cannot hover anyway. So each entry
+        renders its own note inline under the name at small widths, and reverts
+        to the shared hover line at `lg` where the radar is back and repeating
+        every note would double the column's height.
+
+        The ring name is the heading rather than a decorative label — this is
+        the structure a screen reader walks, and "Daily / Fluent / Working /
+        Watching" is the actual information architecture of the section.
+      */}
       <div className="mt-section grid grid-cols-12 gap-x-gutter gap-y-band">
-        {stackRings.map((ring) => {
+        {stackRings.map((ring, ringIndex) => {
           const entries = stack.filter(
             (entry) => entry.ring === ring && !dimmed(entry),
           );
           if (!entries.length) return null;
+          const meaning = RING_MEANING.find(([name]) => name === ring)?.[1];
           return (
             <section key={ring} className="col-span-12 sm:col-span-6 lg:col-span-3">
-              <h3 className="label rule-b pb-3">{ring}</h3>
-              <ul className="mt-4 space-y-2">
+              <h3 className="label rule-b flex items-center gap-2.5 pb-3">
+                <span
+                  aria-hidden="true"
+                  className="h-1.5 w-1.5 shrink-0 rounded-full"
+                  style={{
+                    background: "var(--accent)",
+                    opacity: 1 - ringIndex * 0.22,
+                  }}
+                />
+                <span className="text-ink">{ring}</span>
+              </h3>
+
+              {/* The ring's meaning, inline on mobile. At `lg` the legend in
+                  the right-hand column already says this and repeating it is
+                  noise. */}
+              {meaning && (
+                <p className="mt-3 text-[0.9375rem] text-ink-faint lg:hidden">
+                  {meaning}
+                </p>
+              )}
+
+              <ul className="mt-4 space-y-4 lg:space-y-2">
                 {entries.map((entry) => (
                   <li key={entry.name}>
                     <button
@@ -246,10 +338,16 @@ export default function Stack() {
                       onFocus={() => setHovered(entry)}
                       onMouseLeave={() => setHovered(null)}
                       onBlur={() => setHovered(null)}
-                      className="text-left text-ink-muted transition-colors duration-300 hover:text-accent focus-visible:text-accent"
+                      className="block w-full text-left text-ink-muted transition-colors duration-300 hover:text-accent focus-visible:text-accent"
                     >
                       {entry.name}
                     </button>
+                    {/* Inline below `lg` only — see the block comment above. */}
+                    {entry.note && (
+                      <p className="mt-1 max-w-measure text-[0.875rem] leading-relaxed text-ink-faint lg:hidden">
+                        {entry.note}
+                      </p>
+                    )}
                   </li>
                 ))}
               </ul>

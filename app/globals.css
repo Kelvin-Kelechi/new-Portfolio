@@ -663,8 +663,6 @@
      */
     --scale-blue: 1;
     --scale-brown: 1;
-    /* Prevent GPU compositing issues on mobile and fix SVG rendering */
-    contain: layout style paint;
     /*
      * How far the hands sit from the card, as a fraction of their desktop
      * offset — 1 is the desktop composition, lower pulls them inward.
@@ -2357,6 +2355,90 @@ textarea.field-control {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
+   TECH RADAR — entrance
+
+   The rings draw in from the centre outward, then the points fade up behind
+   them. It states the encoding before a single label is read: the thing being
+   measured is distance from the middle.
+
+   Deliberately NOT layer-promoted. No `will-change`, no `translate3d` — an SVG
+   subtree pushed onto its own compositor layer gets rasterized at layer
+   resolution, and 10px mono labels are exactly the content that cannot survive
+   that. These run on opacity and `r`, both of which the compositor animates
+   without help, and the whole thing is over in under a second.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.radar-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: radar-ring-in 620ms var(--ease-spring) both;
+  /* Innermost first. `--ring` counts outward from 0, so the stagger reads as
+     the encoding being built up rather than as four unrelated circles. */
+  animation-delay: calc(var(--ring, 0) * 90ms);
+}
+
+@keyframes radar-ring-in {
+  from {
+    opacity: 0;
+    scale: 0.86;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+.radar-point {
+  animation: radar-point-in 420ms var(--ease-editorial) both;
+  /* Starts after the last ring lands (4 × 90 + 620 ≈ 980ms), then a short
+     per-point stagger. Capped at 700ms of spread so the tail does not run on
+     past the point where a visitor has already started reading. */
+  animation-delay: calc(560ms + min(var(--point, 0) * 26ms, 700ms));
+}
+
+@keyframes radar-point-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* A dimmed point sets inline `opacity`, which an animation with `both` would
+   otherwise win against for the whole delay window — so the entrance has to
+   stand down while the filter is driving. Keyed to an explicit attribute: an
+   earlier version tested `[style*="opacity"]`, which also matched the
+   `transition: opacity ...` every point carries, so it disabled the entrance
+   on all of them rather than only the dimmed ones. */
+.radar-point[data-dimmed] {
+  animation-name: none;
+}
+
+/* Expands from the dot rather than appearing at full size, so the connection
+   between the focused list item and its point is legible as motion. */
+.radar-halo {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: radar-halo-in 300ms var(--ease-spring) both;
+}
+
+@keyframes radar-halo-in {
+  from {
+    opacity: 0;
+    scale: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .radar-ring,
+  .radar-point,
+  .radar-halo {
+    animation: none;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
    PREMIUM BRANDING — Emerald brand identity with subtle glow effects
    ══════════════════════════════════════════════════════════════════════════ */
 
@@ -2418,11 +2500,20 @@ html {
   scroll-padding-top: var(--header-total);
 }
 
-/* Optimized scroll reveal animation with GPU acceleration */
-[data-reveal] {
-  /* Don't force will-change on the entire container - apply only to animated items */
-  contain: layout style;
-}
+/*
+ * No `will-change` on [data-reveal].
+ *
+ * An earlier version put `will-change: opacity, transform` here, which promotes
+ * EVERY revealed section to its own compositor layer for the lifetime of the
+ * page — the hint is never released, because nothing removes it once the reveal
+ * has run. On a phone that is a dozen-plus permanent layers competing for a
+ * VRAM budget far smaller than a desktop's; the compositor evicts them under
+ * pressure and the section renders blank until something forces a repaint.
+ *
+ * The reveal animates opacity and transform, which the compositor already
+ * handles without the hint. `will-change` buys a few milliseconds on the first
+ * frame and costs a resident layer forever, which is the wrong trade on mobile.
+ */
 
 .reveal-item {
   opacity: var(--reveal-opacity, 0);
@@ -2450,12 +2541,24 @@ html {
   }
 }
 
-/* Smooth parallax for hero illustration without jank */
-[data-parallax] {
-  /* Don't force GPU layer on mobile - causes compositing issues
-     Let the browser optimize naturally based on actual scroll performance */
-  contain: layout style;
-}
+/*
+ * No blanket promotion on [data-parallax].
+ *
+ * A previous version set `will-change: transform` plus `translate3d(0,0,0)`
+ * here. Both are layer-promotion hints, and on the hero they did real damage:
+ *
+ *   - A 3D transform establishes a stacking context, which flattens the
+ *     z-order the hand layers depend on. The composition is built on the brown
+ *     hand passing BEHIND the card (z-index -1) while the blue thumb crosses in
+ *     FRONT (z 2); collapse that and the hands render clipped or in the wrong
+ *     order.
+ *   - Promotion rasterizes the subtree into a fixed-resolution GPU texture.
+ *     The hands are SVG scaled past 100% of their box, so they get baked at
+ *     layer resolution and then scaled up — which is what shows as cracks and
+ *     seams along the artwork's edges rather than clean vector curves.
+ *
+ * The parallax itself is driven per-element elsewhere and does not need this.
+ */
 
 /* Smooth transitions for scroll-triggered elements */
 .rise,
@@ -2472,7 +2575,15 @@ html {
   }
 }
 
-/* Optimized hover states for premium feel */
+/*
+ * Hover transitions, without the layer promotion.
+ *
+ * `will-change` on :hover was worse than useless here. On a touch device
+ * :hover latches after a tap and does not clear until the next tap elsewhere,
+ * so tapping through a page leaves a trail of promoted layers behind it — and
+ * the hint arrives at the same moment as the transition it was meant to
+ * prepare, so it cannot help the first frame anyway.
+ */
 button,
 a {
   transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform;
@@ -2480,43 +2591,11 @@ a {
   transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Only apply will-change on hover for desktop, not globally on mobile */
-@media (hover: hover) {
-  button:hover,
-  a:hover {
-    will-change: transform, opacity;
-  }
-}
-
 /* Smooth scroll progress bar */
 @supports (animation-timeline: scroll()) {
   .scroll-progress {
     animation-timeline: scroll();
   }
-}
-
-/* ══════════════════════════════════════════════════════════════════════════
-   MOBILE RENDERING FIXES — Prevent compositing layer issues on real devices
-   ══════════════════════════════════════════════════════════════════════════ */
-
-/* Prevent sections from disappearing during scroll on mobile devices */
-section,
-article,
-[data-reveal],
-.reveal-item {
-  contain: layout style;
-}
-
-/* Fix hand image rendering on all devices */
-.hand-stage img {
-  /* Ensure images render with correct aspect ratio and no clipping */
-  contain: paint;
-  /* Prevent SVG rendering issues */
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  /* Ensure images scale properly */
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -2554,8 +2633,6 @@ article,
   .reveal-item {
     transition: opacity 500ms cubic-bezier(0.34, 1.56, 0.64, 1),
                 transform 600ms cubic-bezier(0.34, 1.56, 0.64, 1);
-    /* Remove will-change on mobile - it causes rendering issues */
-    will-change: auto;
   }
 
   [data-reveal] .reveal-item {
@@ -2563,24 +2640,10 @@ article,
     animation-delay: calc(var(--i, 0) * 60ms);
   }
 
-  /* Disable parallax on mobile to save resources and prevent compositing issues */
-  [data-parallax] {
-    will-change: auto;
-    transform: none;
-  }
-
   /* Simpler scroll reveals on touch devices */
   .rise,
   .scroll-reveal {
     animation-duration: 500ms;
-    will-change: auto;
-  }
-
-  /* Ensure sections stay visible on mobile - prevent compositing layer collapse */
-  section,
-  article {
-    will-change: auto;
-    transform: translateZ(0);
   }
 }
 
