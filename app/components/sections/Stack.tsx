@@ -59,21 +59,26 @@ const round = (value: number) => Math.round(value * 100) / 100;
  * ring means. Domain is handled by the filter rather than by angle, because
  * fixed 90° sectors cannot hold six labels without overlapping.
  *
- * ── On mobile the radar is not rendered at all ──────────────────────────────
+ * ── On mobile the diagram stays; the labels go ──────────────────────────────
  *
- * Not hidden with `display: none` — genuinely not in the tree, behind a media
- * query the SVG's own container carries. The binding constraint is arc length
- * between neighbouring points, not the type scale: at 375px the ring spacing
- * closes to about 14px, so adjacent labels collide however the anchors are
- * solved, and shrinking the type to avoid the collision and enlarging it to be
- * readable are the same dial turned opposite ways. A radar you cannot read is
- * not a radar, and shrinking one until it becomes texture is worse than
- * replacing it with something honest.
+ * Two viewBoxes over one geometry, swapped at `lg`. Both draw the same rings
+ * and the same points; only the desktop one draws the names beside them.
  *
- * What replaces it is the ring list, which was always the more useful view —
- * below `lg` it becomes the primary presentation rather than a fallback, and
- * every entry there carries its note inline instead of hiding it behind a
- * hover a touch device cannot perform.
+ * The split is there because exactly one part of the chart fails at 390px, and
+ * it is not the diagram. The binding constraint is arc length between
+ * neighbouring points: at that width the gap closes to about 14px, so adjacent
+ * labels collide however the anchors are solved — shrinking the type to avoid
+ * the collision and enlarging it to be readable are the same dial turned
+ * opposite ways. The rings and dots have no such problem. They encode by
+ * radius, they read fine small, and they are the part that says what the
+ * section is about before a word is read.
+ *
+ * So the phone keeps the shape of the answer — how much sits at each distance
+ * from the centre — and the ring list underneath names every point with its
+ * note inline, which is a better reading experience there than a label crammed
+ * against a dot would be. The mobile box is also drawn tight to the rings
+ * rather than carrying the desktop label gutter, so the full width goes to the
+ * circle instead of to 300 units of empty margin.
  *
  * The SVG is aria-hidden and duplicated as a real list, so the section is
  * fully available to a screen reader without trying to make a scatter plot
@@ -166,12 +171,10 @@ export default function Stack() {
   return (
     <>
       <div className="mt-section grid grid-cols-12 items-center gap-x-gutter gap-y-band">
-        {/* Hidden below `lg`, where the geometry stops being legible. `hidden`
-            rather than a scale-down: see the component note. */}
         {/* Seven columns rather than six: the radar is the subject here, and the
             legend beside it is four short rows that ran out of content half way
             down and left an empty block under themselves. */}
-        <div className="hidden lg:col-span-7 lg:block">
+        <div className="col-span-12 lg:col-span-7">
           {/* The viewBox is wider than the geometry: flank labels are anchored
               outward from the outermost ring, so a box drawn tight to the
               circle clips the longest of them ("Event-driven design"). */}
@@ -181,111 +184,42 @@ export default function Stack() {
                above a laptop, which is what held the viewBox scale at 0.62 and
                the labels at 6px. Letting it fill the column takes the scale to
                ~0.77 and the labels to a readable ~13px. */
-            className="radar mx-auto w-full max-w-[44rem]"
+            className="radar mx-auto hidden w-full max-w-[44rem] lg:block"
             aria-hidden="true"
           >
-            {/* Rings, outermost first so the inner ones paint on top. Each
-                carries its index as `--ring` so the draw-in can stagger from
-                the centre outward — see `.radar-ring` in globals.css. */}
-            {[...RADII].reverse().map((radius, index) => (
-              <circle
-                key={radius}
-                className="radar-ring"
-                style={
-                  { "--ring": RADII.length - 1 - index } as React.CSSProperties
-                }
-                cx={CENTER}
-                cy={CENTER}
-                r={radius}
-                fill={index === RADII.length - 1 ? "var(--accent-soft)" : "none"}
-                stroke="var(--rule)"
-                strokeWidth="1"
-              />
-            ))}
+            <RadarBody
+              points={points}
+              dimmed={dimmed}
+              hovered={hovered}
+              labels
+            />
+          </svg>
 
-            {points.map(({ entry, x, y, labelX, labelY, anchor }, index) => {
-              const faded = dimmed(entry);
-              const active = hovered?.name === entry.name;
-              return (
-                <g
-                  key={entry.name}
-                  className="radar-point"
-                  /* An explicit flag, not an inline-style probe. The CSS needs
-                     to cancel the entrance animation while a point is dimmed,
-                     and matching on `[style*="opacity"]` cannot do that job —
-                     the transition declaration below contains the substring
-                     "opacity" on every point, so the guard fired always and
-                     killed the entrance for all 21. */
-                  data-dimmed={faded ? "" : undefined}
-                  style={
-                    {
-                      "--point": index,
-                      opacity: faded ? 0.18 : undefined,
-                      transition: "opacity 400ms var(--ease-editorial)",
-                    } as React.CSSProperties
-                  }
-                >
-                  {/* Halo on the active point. Drawn as a real circle rather
-                      than a filter so it costs no rasterization, and sized to
-                      stay clear of the labels around it. Keyboard focus in the
-                      list below drives `hovered`, so this is what makes the
-                      radar legible to someone tabbing rather than pointing. */}
-                  {active && (
-                    <circle
-                      cx={x}
-                      cy={y}
-                      /* Was 13, against a 6-unit active dot. The dot is 9 now,
-                         which left the ring almost touching it — the halo has
-                         to keep visible air around the point to read as a halo
-                         rather than as a thick outline. */
-                      r={19}
-                      fill="none"
-                      stroke="var(--accent)"
-                      strokeWidth="2"
-                      opacity={0.42}
-                      className="radar-halo"
-                    />
-                  )}
-                  {/* Dots scale with the type. At r=3.5 against 17-unit labels
-                      the point reads as a speck beside its own name. */}
-                  <circle
-                    cx={x}
-                    cy={y}
-                    r={active ? 9 : 5.5}
-                    fill={active ? "var(--accent)" : "var(--ink-muted)"}
-                    style={{
-                      transition:
-                        "r 300ms var(--ease-spring), fill 300ms linear",
-                    }}
-                  />
-                  <text
-                    x={x + labelX}
-                    y={y + labelY}
-                    textAnchor={anchor}
-                    /* `--ink`, not `--ink-faint`. Faint is the weakest tier in
-                       the scale and was the right choice while these were
-                       decorative texture; now that they are readable they are
-                       content, and content does not sit two tiers down. */
-                    fill={active ? "var(--accent)" : "var(--ink)"}
-                    /* Paint the fill over a background-coloured stroke so a
-                       label stays legible where it crosses a ring line. The
-                       halo grows with the type or it stops covering the glyph
-                       edges. */
-                    stroke="var(--paper)"
-                    strokeWidth="4.5"
-                    paintOrder="stroke"
-                    style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: `${LABEL_SIZE}px`,
-                      letterSpacing: "0.02em",
-                      transition: "fill 300ms linear",
-                    }}
-                  >
-                    {entry.name}
-                  </text>
-                </g>
-              );
-            })}
+          {/*
+            The same diagram, sized for a phone.
+
+            Rings, dots, and the radius encoding are identical — only the inline
+            labels are dropped, because they are the one part that genuinely
+            cannot fit. At 390px the arc between adjacent points closes to about
+            14px, and no type size resolves that: shrinking the text to avoid a
+            collision and enlarging it to be readable are the same dial turned
+            opposite ways.
+
+            The viewBox is drawn tight to the rings rather than carrying the
+            desktop gutter, which exists only to hold outward-anchored labels.
+            That is what buys the diagram its size here — the full width goes to
+            the circle instead of to 300 units of empty margin.
+
+            So the phone gets the shape of the answer: how much sits at each
+            distance from the centre. The ring list underneath names every point
+            and carries its note inline.
+          */}
+          <svg
+            viewBox={`0 0 ${SIZE} ${SIZE}`}
+            className="radar mx-auto mt-2 block w-full max-w-[21rem] lg:hidden"
+            aria-hidden="true"
+          >
+            <RadarBody points={points} dimmed={dimmed} hovered={hovered} />
           </svg>
         </div>
 
@@ -416,6 +350,147 @@ export default function Stack() {
           );
         })}
       </div>
+    </>
+  );
+}
+
+type RadarPoint = {
+  entry: StackEntry;
+  x: number;
+  y: number;
+  labelX: number;
+  labelY: number;
+  anchor: "start" | "end" | "middle";
+};
+
+/**
+ * The rings and the points, shared by both viewBoxes.
+ *
+ * Extracted so the mobile and desktop diagrams cannot drift apart. They differ
+ * in exactly one respect — whether the inline labels are drawn — and that is a
+ * prop rather than a second copy of eighty lines of SVG.
+ */
+function RadarBody({
+  points,
+  dimmed,
+  hovered,
+  labels = false,
+}: {
+  points: readonly RadarPoint[];
+  dimmed: (entry: StackEntry) => boolean;
+  hovered: StackEntry | null;
+  /**
+   * Draw the name beside each dot.
+   *
+   * Off below `lg`. The constraint is arc length, not type size: at 390px the
+   * gap between adjacent points closes to ~14px, so labels collide whatever
+   * size they are set at. The ring list underneath names every point instead.
+   */
+  labels?: boolean;
+}) {
+  return (
+    <>
+      {/* Rings, outermost first so the inner ones paint on top. Each carries
+          its index as `--ring` so the draw-in can stagger from the centre
+          outward — see `.radar-ring` in globals.css. */}
+      {[...RADII].reverse().map((radius, index) => (
+        <circle
+          key={radius}
+          className="radar-ring"
+          style={{ "--ring": RADII.length - 1 - index } as React.CSSProperties}
+          cx={CENTER}
+          cy={CENTER}
+          r={radius}
+          fill={index === RADII.length - 1 ? "var(--accent-soft)" : "none"}
+          stroke="var(--rule)"
+          strokeWidth="1"
+        />
+      ))}
+
+      {points.map(({ entry, x, y, labelX, labelY, anchor }, index) => {
+        const faded = dimmed(entry);
+        const active = hovered?.name === entry.name;
+        return (
+          <g
+            key={entry.name}
+            className="radar-point"
+            /* An explicit flag, not an inline-style probe. The CSS needs to
+               cancel the entrance animation while a point is dimmed, and
+               matching on `[style*="opacity"]` cannot do that job — the
+               transition declaration below contains the substring "opacity" on
+               every point, so the guard fired always and killed the entrance
+               for all 21. */
+            data-dimmed={faded ? "" : undefined}
+            style={
+              {
+                "--point": index,
+                opacity: faded ? 0.18 : undefined,
+                transition: "opacity 400ms var(--ease-editorial)",
+              } as React.CSSProperties
+            }
+          >
+            {/* Halo on the active point. Drawn as a real circle rather than a
+                filter so it costs no rasterization, and sized to stay clear of
+                the labels around it. Keyboard focus in the list below drives
+                `hovered`, so this is what makes the radar legible to someone
+                tabbing rather than pointing — and on mobile, where there are no
+                labels, it is the whole feedback for a tap. */}
+            {active && (
+              <circle
+                cx={x}
+                cy={y}
+                /* Was 13, against a 6-unit active dot. The dot is 9 now, which
+                   left the ring almost touching it — the halo has to keep
+                   visible air around the point to read as a halo rather than as
+                   a thick outline. */
+                r={19}
+                fill="none"
+                stroke="var(--accent)"
+                strokeWidth="2"
+                opacity={0.42}
+                className="radar-halo"
+              />
+            )}
+            {/* Dots scale with the type. At r=3.5 against 17-unit labels the
+                point reads as a speck beside its own name. */}
+            <circle
+              cx={x}
+              cy={y}
+              r={active ? 9 : 5.5}
+              fill={active ? "var(--accent)" : "var(--ink-muted)"}
+              style={{
+                transition: "r 300ms var(--ease-spring), fill 300ms linear",
+              }}
+            />
+            {labels && (
+              <text
+                x={x + labelX}
+                y={y + labelY}
+                textAnchor={anchor}
+                /* `--ink`, not `--ink-faint`. Faint is the weakest tier in the
+                   scale and was the right choice while these were decorative
+                   texture; now that they are readable they are content, and
+                   content does not sit two tiers down. */
+                fill={active ? "var(--accent)" : "var(--ink)"}
+                /* Paint the fill over a background-coloured stroke so a label
+                   stays legible where it crosses a ring line. The halo grows
+                   with the type or it stops covering the glyph edges. */
+                stroke="var(--paper)"
+                strokeWidth="4.5"
+                paintOrder="stroke"
+                style={{
+                  fontFamily: "var(--font-mono)",
+                  fontSize: `${LABEL_SIZE}px`,
+                  letterSpacing: "0.02em",
+                  transition: "fill 300ms linear",
+                }}
+              >
+                {entry.name}
+              </text>
+            )}
+          </g>
+        );
+      })}
     </>
   );
 }
