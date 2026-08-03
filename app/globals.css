@@ -14,10 +14,10 @@
    ══════════════════════════════════════════════════════════════════════════ */
 
 @layer base {
-  /* Dark is now the alternate, so it is keyed only to an explicit attribute.
-     The bare `:root` fallback below carries the light palette, which is what
-     renders if the pre-paint script never runs. */
-  :root[data-theme="dark"] {
+  /* Dark is now the default, so it is keyed to bare :root.
+     Light mode requires explicit data-theme="light" attribute.
+     This ensures dark mode loads before the pre-paint script runs. */
+  :root {
     color-scheme: dark;
 
     /* Surfaces. Warm-tinted near-black — never #000, which reads as a hole. */
@@ -133,9 +133,7 @@
     --brand-glow-bright: rgba(29, 209, 161, 0.5);
   }
 
-  /* The default. `:root` unqualified means a failed script or a no-JS visitor
-     still gets the intended theme rather than a flash of the wrong one. */
-  :root,
+  /* Light theme requires explicit data-theme="light" attribute. */
   :root[data-theme="light"] {
     color-scheme: light;
 

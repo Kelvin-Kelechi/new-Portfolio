@@ -80,8 +80,9 @@ export const viewport: Viewport = {
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#fdfbf7" },
     { media: "(prefers-color-scheme: dark)", color: "#0b0b0d" },
+    { color: "#0b0b0d" }, /* Default to dark */
   ],
-  colorScheme: "light dark",
+  colorScheme: "dark light", /* Dark first as default */
 };
 
 /**
@@ -90,19 +91,18 @@ export const viewport: Viewport = {
  * white flash on every navigation — the single most common tell of a
  * bolted-on theme switcher.
  *
- * Light is the default: an unset preference resolves to light, and only an
- * explicit stored choice or an explicit `prefers-color-scheme: dark` moves it
- * off that. Honouring an OS dark preference is deliberate — someone who has
- * told their machine they want dark everywhere should not be handed a
- * full-bleed white page, and they can still toggle either way.
+ * Dark is the default: an unset preference resolves to dark mode, and only an
+ * explicit stored choice overrides it. Honouring an OS preference is deliberate —
+ * someone who has told their machine they want a specific theme should see that,
+ * but new visitors get the premium dark experience by default.
  */
 const themeScript = `(function(){try{
 var d=document.documentElement,s=localStorage.getItem('theme');
-var dark=s==='dark';
+var dark=s==='light'?false:(s==='dark'?true:window.matchMedia('(prefers-color-scheme: dark)').matches);
 d.setAttribute('data-theme',dark?'dark':'light');
 if(localStorage.getItem('motion')==='reduced')d.setAttribute('data-motion','reduced');
 if(localStorage.getItem('reading')==='on')d.setAttribute('data-reading','on');
-}catch(e){document.documentElement.setAttribute('data-theme','light')}})()`;
+}catch(e){document.documentElement.setAttribute('data-theme','dark')}})()`;
 
 /* Person schema. This is what search engines and AI crawlers read to
    understand who the site is about — worth more than any meta keyword. */
