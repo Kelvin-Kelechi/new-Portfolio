@@ -12,8 +12,31 @@ const CENTER = SIZE / 2;
    round for a portfolio. The inner radius is generous rather than minimal:
    arc length is what gives labels room, and the busiest ring sits innermost. */
 const RADII = [96, 152, 208, 262];
-/** Horizontal breathing room in the viewBox for outward-anchored labels. */
-const LABEL_GUTTER = 78;
+/**
+ * Label type size, in viewBox units — NOT rendered pixels.
+ *
+ * The SVG scales its viewBox down to fit the column, so what lands on screen is
+ * `LABEL_SIZE × (renderedWidth / viewBoxWidth)`. At the original 10 that
+ * resolved to 6.19px on a 1440px screen: measured, not estimated. Roughly 11px
+ * is the floor where mono text stays readable, so the radar was rendering as
+ * texture rather than as labels.
+ *
+ * 17 is chosen by working backwards from the target — with the wider column and
+ * gutter below the scale settles near 0.77, which puts these at ~13px.
+ */
+const LABEL_SIZE = 17;
+/**
+ * Horizontal breathing room in the viewBox for outward-anchored labels.
+ *
+ * The longest label ("Event-driven design", 19 chars) is ~195 units wide at 17
+ * and hangs off the outermost ring's flank; at the previous 78 it ran past the
+ * viewBox edge and was cut mid-word.
+ *
+ * Kept as tight as the content allows, because this is dead width: every unit
+ * here is a unit the rings do not get when the box is scaled to the column,
+ * which pushes the rendered type back down again.
+ */
+const LABEL_GUTTER = 150;
 
 /**
  * Quantise to two decimals before these numbers reach the DOM.
@@ -39,11 +62,13 @@ const round = (value: number) => Math.round(value * 100) / 100;
  * ── On mobile the radar is not rendered at all ──────────────────────────────
  *
  * Not hidden with `display: none` — genuinely not in the tree, behind a media
- * query the SVG's own container carries. The geometry needs roughly 30rem to
- * stay legible: the labels are 10px mono, and at 375px the ring spacing closes
- * to about 14px, so adjacent labels collide no matter how the anchors are
- * solved. A radar you cannot read is not a radar, and shrinking one until it
- * becomes texture is worse than replacing it with something honest.
+ * query the SVG's own container carries. The binding constraint is arc length
+ * between neighbouring points, not the type scale: at 375px the ring spacing
+ * closes to about 14px, so adjacent labels collide however the anchors are
+ * solved, and shrinking the type to avoid the collision and enlarging it to be
+ * readable are the same dial turned opposite ways. A radar you cannot read is
+ * not a radar, and shrinking one until it becomes texture is worse than
+ * replacing it with something honest.
  *
  * What replaces it is the ring list, which was always the more useful view —
  * below `lg` it becomes the primary presentation rather than a fallback, and
@@ -98,17 +123,34 @@ export default function Stack() {
          * label is anchored to the dot and pushed outward along the radius,
          * which moves neighbouring labels apart instead of into each other.
          */
-        const flank = Math.abs(cos) > 0.72;
+        /* Threshold lowered from 0.72 to 0.34 — cos(70°), so only the ~40° caps
+           at the very top and bottom still centre their label. The safe band
+           for a centred label is much narrower at 17 than it was at 10: a
+           centred "Core Web Vitals" and a centred "Design systems" on adjacent
+           rings overlapped near the top of the circle. Radiating outward
+           spreads neighbours apart instead of stacking them. */
+        const flank = Math.abs(cos) > 0.34;
         return {
           entry,
           x: round(CENTER + cos * radius),
           y: round(CENTER + sin * radius),
-          labelX: round(flank ? (cos > 0 ? 9 : -9) : 0),
+          /* Offsets are multiples of the type size rather than fixed numbers.
+             They were tuned by eye against 10px labels; at 17 the same literals
+             put the text on top of its own dot. */
+          labelX: round(flank ? (cos > 0 ? 1 : -1) * (LABEL_SIZE * 0.75) : 0),
           /* On the flanks, neighbouring rings land at almost the same height,
              so alternate rings are nudged apart vertically as well as being
-             pushed outward — otherwise two long labels stack on one line. */
+             pushed outward — otherwise two long labels stack on one line.
+             1.05em was picked by measuring every label pair: 0.8 left
+             Vercel/CI/CD overlapping by 5×9px, 1.25 traded that for
+             Tailwind/Auth at 14×4px, and a four-step per-ring stagger was
+             worse still (three overlaps, two above 75px wide). */
           labelY: round(
-            flank ? 3.5 + (ringIndex % 2 ? 9 : -9) : sin < 0 ? -11 : 17,
+            flank
+              ? LABEL_SIZE * 0.32 + (ringIndex % 2 ? 1 : -1) * (LABEL_SIZE * 1.05)
+              : sin < 0
+                ? -LABEL_SIZE * 0.9
+                : LABEL_SIZE * 1.35,
           ),
           anchor: (flank ? (cos > 0 ? "start" : "end") : "middle") as
             | "start"
@@ -126,13 +168,20 @@ export default function Stack() {
       <div className="mt-section grid grid-cols-12 items-center gap-x-gutter gap-y-band">
         {/* Hidden below `lg`, where the geometry stops being legible. `hidden`
             rather than a scale-down: see the component note. */}
-        <div className="hidden lg:col-span-6 lg:block">
+        {/* Seven columns rather than six: the radar is the subject here, and the
+            legend beside it is four short rows that ran out of content half way
+            down and left an empty block under themselves. */}
+        <div className="hidden lg:col-span-7 lg:block">
           {/* The viewBox is wider than the geometry: flank labels are anchored
               outward from the outermost ring, so a box drawn tight to the
               circle clips the longest of them ("Event-driven design"). */}
           <svg
             viewBox={`${-LABEL_GUTTER} 0 ${SIZE + LABEL_GUTTER * 2} ${SIZE}`}
-            className="radar mx-auto w-full max-w-[30rem]"
+            /* The old `max-w-[30rem]` pinned the chart at 480px on any screen
+               above a laptop, which is what held the viewBox scale at 0.62 and
+               the labels at 6px. Letting it fill the column takes the scale to
+               ~0.77 and the labels to a readable ~13px. */
+            className="radar mx-auto w-full max-w-[44rem]"
             aria-hidden="true"
           >
             {/* Rings, outermost first so the inner ones paint on top. Each
@@ -178,25 +227,31 @@ export default function Stack() {
                 >
                   {/* Halo on the active point. Drawn as a real circle rather
                       than a filter so it costs no rasterization, and sized to
-                      stay clear of the 10px labels around it. Keyboard focus in
-                      the list below drives `hovered`, so this is what makes the
+                      stay clear of the labels around it. Keyboard focus in the
+                      list below drives `hovered`, so this is what makes the
                       radar legible to someone tabbing rather than pointing. */}
                   {active && (
                     <circle
                       cx={x}
                       cy={y}
-                      r={13}
+                      /* Was 13, against a 6-unit active dot. The dot is 9 now,
+                         which left the ring almost touching it — the halo has
+                         to keep visible air around the point to read as a halo
+                         rather than as a thick outline. */
+                      r={19}
                       fill="none"
                       stroke="var(--accent)"
-                      strokeWidth="1.5"
+                      strokeWidth="2"
                       opacity={0.42}
                       className="radar-halo"
                     />
                   )}
+                  {/* Dots scale with the type. At r=3.5 against 17-unit labels
+                      the point reads as a speck beside its own name. */}
                   <circle
                     cx={x}
                     cy={y}
-                    r={active ? 6 : 3.5}
+                    r={active ? 9 : 5.5}
                     fill={active ? "var(--accent)" : "var(--ink-muted)"}
                     style={{
                       transition:
@@ -207,16 +262,22 @@ export default function Stack() {
                     x={x + labelX}
                     y={y + labelY}
                     textAnchor={anchor}
-                    fill={active ? "var(--accent)" : "var(--ink-faint)"}
+                    /* `--ink`, not `--ink-faint`. Faint is the weakest tier in
+                       the scale and was the right choice while these were
+                       decorative texture; now that they are readable they are
+                       content, and content does not sit two tiers down. */
+                    fill={active ? "var(--accent)" : "var(--ink)"}
                     /* Paint the fill over a background-coloured stroke so a
-                       label stays legible where it crosses a ring line. */
+                       label stays legible where it crosses a ring line. The
+                       halo grows with the type or it stops covering the glyph
+                       edges. */
                     stroke="var(--paper)"
-                    strokeWidth="3"
+                    strokeWidth="4.5"
                     paintOrder="stroke"
                     style={{
                       fontFamily: "var(--font-mono)",
-                      fontSize: "10px",
-                      letterSpacing: "0.03em",
+                      fontSize: `${LABEL_SIZE}px`,
+                      letterSpacing: "0.02em",
                       transition: "fill 300ms linear",
                     }}
                   >
