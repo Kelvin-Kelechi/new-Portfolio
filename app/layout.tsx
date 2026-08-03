@@ -98,7 +98,7 @@ export const viewport: Viewport = {
  */
 const themeScript = `(function(){try{
 var d=document.documentElement,s=localStorage.getItem('theme');
-var dark=s==='dark'||(!s&&window.matchMedia('(prefers-color-scheme: dark)').matches);
+var dark=s==='dark';
 d.setAttribute('data-theme',dark?'dark':'light');
 if(localStorage.getItem('motion')==='reduced')d.setAttribute('data-motion','reduced');
 if(localStorage.getItem('reading')==='on')d.setAttribute('data-reading','on');
