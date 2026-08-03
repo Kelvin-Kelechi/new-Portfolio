@@ -663,6 +663,8 @@
      */
     --scale-blue: 1;
     --scale-brown: 1;
+    /* Prevent GPU compositing issues on mobile and fix SVG rendering */
+    contain: layout style paint;
     /*
      * How far the hands sit from the card, as a fraction of their desktop
      * offset — 1 is the desktop composition, lower pulls them inward.
@@ -2418,9 +2420,8 @@ html {
 
 /* Optimized scroll reveal animation with GPU acceleration */
 [data-reveal] {
-  /* Will-change is a performance double-edge: it improves paint performance
-     but adds memory overhead. Only apply to elements that actually animate. */
-  will-change: opacity, transform;
+  /* Don't force will-change on the entire container - apply only to animated items */
+  contain: layout style;
 }
 
 .reveal-item {
@@ -2451,9 +2452,9 @@ html {
 
 /* Smooth parallax for hero illustration without jank */
 [data-parallax] {
-  /* GPU-accelerated transform3d for smooth parallax on scroll */
-  will-change: transform;
-  transform: translate3d(0, 0, 0);
+  /* Don't force GPU layer on mobile - causes compositing issues
+     Let the browser optimize naturally based on actual scroll performance */
+  contain: layout style;
 }
 
 /* Smooth transitions for scroll-triggered elements */
@@ -2477,13 +2478,14 @@ a {
   transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform;
   transition-duration: 300ms;
   transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
-  /* Minimize browser reflow by using compositor-friendly properties */
-  will-change: auto;
 }
 
-button:hover,
-a:hover {
-  will-change: transform, opacity;
+/* Only apply will-change on hover for desktop, not globally on mobile */
+@media (hover: hover) {
+  button:hover,
+  a:hover {
+    will-change: transform, opacity;
+  }
 }
 
 /* Smooth scroll progress bar */
@@ -2491,6 +2493,30 @@ a:hover {
   .scroll-progress {
     animation-timeline: scroll();
   }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MOBILE RENDERING FIXES — Prevent compositing layer issues on real devices
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Prevent sections from disappearing during scroll on mobile devices */
+section,
+article,
+[data-reveal],
+.reveal-item {
+  contain: layout style;
+}
+
+/* Fix hand image rendering on all devices */
+.hand-stage img {
+  /* Ensure images render with correct aspect ratio and no clipping */
+  contain: paint;
+  /* Prevent SVG rendering issues */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  /* Ensure images scale properly */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -2528,6 +2554,8 @@ a:hover {
   .reveal-item {
     transition: opacity 500ms cubic-bezier(0.34, 1.56, 0.64, 1),
                 transform 600ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    /* Remove will-change on mobile - it causes rendering issues */
+    will-change: auto;
   }
 
   [data-reveal] .reveal-item {
@@ -2535,15 +2563,24 @@ a:hover {
     animation-delay: calc(var(--i, 0) * 60ms);
   }
 
-  /* Disable parallax on mobile to save resources */
+  /* Disable parallax on mobile to save resources and prevent compositing issues */
   [data-parallax] {
     will-change: auto;
+    transform: none;
   }
 
   /* Simpler scroll reveals on touch devices */
   .rise,
   .scroll-reveal {
     animation-duration: 500ms;
+    will-change: auto;
+  }
+
+  /* Ensure sections stay visible on mobile - prevent compositing layer collapse */
+  section,
+  article {
+    will-change: auto;
+    transform: translateZ(0);
   }
 }
 
