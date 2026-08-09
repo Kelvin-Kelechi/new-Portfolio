@@ -64,6 +64,20 @@ export type Project = {
   repo: string | null;
   /** TODO(slot): screenshot. `null` renders the typographic plate. */
   image: { src: string; alt: string } | null;
+  /**
+   * Ordered gallery, rendered as a carousel inside the device frame.
+   *
+   * Lives on the project rather than in the component. An earlier version kept
+   * one hardcoded array in <ProjectShowcase>, which meant every project with
+   * `category: "Mobile"` showed the SAME five screenshots — correct while there
+   * was one such project and silently wrong the moment there were two.
+   *
+   * Omit or leave empty and the frame falls back to `image`, then to the
+   * typographic plate. Orientation follows `category`: Mobile gets phone
+   * chrome and a portrait viewport, everything else browser chrome and a
+   * landscape one, so the shots here should match that shape.
+   */
+  screenshots?: readonly { src: string; alt: string }[];
   /** Promoted to the full-bleed spotlight above the index. One project only. */
   featured?: boolean;
 
@@ -236,6 +250,30 @@ export const projects: readonly Project[] = [
       src: "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/e2/d5/2e/e2d52eee-74e4-5e2c-03b0-bef31f9bee20/Simulator_Screenshot_-_iPhone_16e_-_2025-12-03_at_11.41.04.png/600x1300bb.png",
       alt: "Looking to Hire app - Home screen with job recommendations",
     },
+    /* Straight from the App Store listing, so they are the same shots a
+       recruiter sees if they follow the link. */
+    screenshots: [
+      {
+        src: "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/e2/d5/2e/e2d52eee-74e4-5e2c-03b0-bef31f9bee20/Simulator_Screenshot_-_iPhone_16e_-_2025-12-03_at_11.41.04.png/600x1300bb.png",
+        alt: "Looking to Hire — home screen with personalised job recommendations",
+      },
+      {
+        src: "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/d8/d3/44/d8d344cb-65df-7cb9-3d06-417393f98081/Simulator_Screenshot_-_iPhone_16e_-_2025-12-03_at_11.41.22.png/600x1300bb.png",
+        alt: "Looking to Hire — job detail and one-tap apply",
+      },
+      {
+        src: "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/a1/6e/45/a16e45dd-eeb9-c0e3-66f2-f7a3aae59c33/Simulator_Screenshot_-_iPhone_16e_-_2025-12-03_at_11.41.11.png/600x1300bb.png",
+        alt: "Looking to Hire — application tracking",
+      },
+      {
+        src: "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/62/d7/90/62d7905c-ac7a-5912-4a3f-46090d4b3f8b/Simulator_Screenshot_-_iPhone_16e_-_2025-12-03_at_11.44.03.png/600x1300bb.png",
+        alt: "Looking to Hire — in-app messaging with employers",
+      },
+      {
+        src: "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/91/e1/ba/91e1ba8f-c2cc-8a80-0203-f1547abba378/Simulator_Screenshot_-_iPhone_16e_-_2025-12-04_at_08.54.40.png/600x1300bb.png",
+        alt: "Looking to Hire — profile and resume management",
+      },
+    ],
     context:
       "The job market in Nigeria and across Africa is fragmented, with job seekers struggling to find the right opportunities and employers unable to discover qualified talent. Traditional job boards lack personalization and real-time communication, creating friction in both hiring and application workflows.",
     sections: [
@@ -270,6 +308,96 @@ export const projects: readonly Project[] = [
       {
         problem: "Job matching relevance required understanding both job requirements and candidate skills across varying profile completeness.",
         resolution: "Built progressive profiling where users unlock better matches as they complete their profiles, creating incentive for engagement while improving recommendation quality.",
+      },
+    ],
+    metrics: [],
+  },
+  {
+    slug: "space-transfers",
+    title: "Space Transfers",
+    /* TODO(slot): confirm. Set to the current year because the editor is live
+       and the entry is marked Ongoing — not because a start date was given. */
+    year: "2026",
+    role: "Full-stack Engineer",
+    /* TODO(slot): confirm — the live editor is shipped, but the run length
+       here is a placeholder rather than a figure you gave me. */
+    duration: "Ongoing",
+    category: "Platform",
+    summary:
+      "Print-on-demand gang sheets — a canvas editor that packs artwork onto print film, then routes the job to a fulfilment printer",
+    detail:
+      "A DTF print-on-demand platform built as four coordinated apps over one API. Customers lay artwork out on a canvas artboard, an auto-nesting engine packs it onto standard sheets with minimal waste, and the job routes to a fulfilment partner and is tracked through printing, shipping and delivery.",
+    stack: ["React", "TypeScript", "Node.js", "Express", "MongoDB", "Canvas", "Stripe", "Gemini"],
+    href: "https://space-transfer.vercel.app",
+    repo: null,
+    image: {
+      src: "/work/space-transfers/editor-gangsheet.png",
+      alt: "Space Transfers — gang sheet editor with 75 pieces auto-nested onto one sheet",
+    },
+    screenshots: [
+      {
+        src: "/work/space-transfers/editor-gangsheet.png",
+        alt: "Space Transfers — 75 pieces auto-nested onto a 23.5in sheet, with the AI edit panel open",
+      },
+      {
+        src: "/work/space-transfers/editor-settings.png",
+        alt: "Space Transfers — sheet settings: auto-nest, item spacing, rulers and margins",
+      },
+      {
+        src: "/work/space-transfers/editor-empty.png",
+        alt: "Space Transfers — empty artboard with the artwork upload drop zone",
+      },
+      {
+        src: "/work/space-transfers/auth-signin.png",
+        alt: "Space Transfers — sign-in with Google OAuth or email and password",
+      },
+      {
+        src: "/work/space-transfers/auth-signup.png",
+        alt: "Space Transfers — account creation",
+      },
+    ],
+    context:
+      "DTF printing is sold by the sheet, so the economics turn entirely on how tightly a customer's artwork packs onto the film. Shops were laying sheets out by hand in design tools, which is slow, wastes material on every job, and produces files a printer still has to re-check before it can run them.",
+    sections: [
+      {
+        heading: "The artboard",
+        body: "The centrepiece is a canvas editor rather than a form. Artwork is dragged in, validated for print DPI, and arranged on a live sheet that reports its own dimensions, piece count and price as it changes. Background and colour removal, crop and generative edits run against Google Gemini from inside the same canvas, so a file never has to leave the editor to be made printable.",
+      },
+      {
+        heading: "Packing the sheet",
+        body: "Auto-nesting is a MaxRects-style free-rectangle packer: it keeps a set of empty rectangles, places each piece into the best-fitting one, then splits and merges what is left. Naive placement is O(n²) against every previously placed item, which falls over well before the thousands of pieces a real sheet carries, so collision lookups go through a uniform spatial grid and rendering is viewport-culled — only what is on screen is drawn.",
+      },
+      {
+        heading: "Four apps, one lifecycle",
+        body: "Customers, the platform operator and the fulfilment partners each get their own application over a shared Express API. An order moves from quote through partner assignment, printing, label generation and tracking, and every transition propagates live to whichever of the three views is watching it. Partner assignment is automatic by region and capacity; payouts and partner earnings fall out of the same lifecycle.",
+      },
+    ],
+    architecture: [
+      "React + Vite · canvas artboard, viewport-culled rendering",
+      "Express API · order lifecycle, assignment, payouts",
+      "MongoDB · orders, designs, partners — BSON size guard on save",
+      "Cloudinary + Sharp · upload-once asset pipeline, print-DPI export",
+      "Gemini · background and colour removal, upscaling",
+      "Stripe / PayPal · checkout · ShipStation · labels and tracking",
+    ],
+    challenges: [
+      {
+        problem:
+          "Nesting degraded badly as sheets filled up. Testing each new piece against every placed one is quadratic, and a sheet carrying thousands of items made the editor unusable long before it was full.",
+        resolution:
+          "Indexed placed pieces in a uniform spatial grid so a collision test only examines the cells a candidate actually overlaps, and merged adjacent free rectangles so the empty-space set stays small instead of fragmenting with every placement.",
+      },
+      {
+        problem:
+          "Artwork was travelling through the system as embedded data. Large designs pushed MongoDB documents toward the BSON ceiling and blew past request-body limits at checkout, which took the database layer down rather than failing cleanly.",
+        resolution:
+          "Images are uploaded once at creation and referenced by URL everywhere downstream — cart, order, checkout, export. Body limits are tiered per route, and a pre-save guard rejects an oversized document at the model rather than letting the driver discover it.",
+      },
+      {
+        problem:
+          "Three roles needed the same order to be current. A printer accepting a job while the customer still saw it as unassigned produces support tickets and duplicate work.",
+        resolution:
+          "State transitions publish through dedicated sync and notification services, so customer, admin and printer views converge on the same order state without any of them polling.",
       },
     ],
     metrics: [],

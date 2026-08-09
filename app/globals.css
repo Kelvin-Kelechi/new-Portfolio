@@ -2002,152 +2002,196 @@ textarea.field-control {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   SCREENSHOT CAROUSEL — App Store showcase
+   SCREENSHOT GALLERY
+
+   Slides and controls only — the surrounding chrome belongs to <DeviceFrame>,
+   so one definition of "what a phone looks like" serves the whole site and a
+   gallery can sit in browser chrome just as easily.
+
+   Sized by `aspect-ratio` from the caller rather than a fixed `min-height`.
+   The old rule pinned the viewport at 800px tall and 380px wide whatever it
+   contained, which is a phone and only a phone; a 16:9 desktop capture in that
+   box is a letterboxed strip with 600px of dead space under it.
    ══════════════════════════════════════════════════════════════════════════ */
 
-.screenshot-carousel {
+/*
+ * Lifted above the card's stretched title link.
+ *
+ * `.stretch-link::after` covers the whole composition at z-index 1 so that
+ * clicking anywhere opens the case study. That is right for a static plate and
+ * fatal for a gallery: it sits over the arrows and the pills, and every click
+ * lands on the link instead of the control. Playwright put it plainly —
+ * "stretch-link subtree intercepts pointer events" — which is exactly what a
+ * visitor would have hit.
+ *
+ * Lifting the whole widget rather than just the buttons is deliberate. Half-
+ * lifting means the arrows work but clicking the screenshot between them
+ * navigates away, which is a worse surprise than the gallery simply not being
+ * a link. The title and "Read the case study" still are.
+ */
+.shot {
+  position: relative;
+  z-index: 10;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
   width: 100%;
 }
 
-.carousel-viewport {
+.shot-viewport {
   position: relative;
   width: 100%;
-  min-height: 800px;
-  max-width: 380px;
-  margin: 0 auto;
-  background: var(--paper-surface);
-  border-radius: 2.5rem;
-  border: 10px solid var(--paper-raised);
   overflow: hidden;
-  box-shadow:
-    0 20px 60px rgb(0 0 0 / 0.15),
-    inset 0 1px 0 rgb(255 255 255 / 0.1);
+  background: var(--paper-sunk);
 }
 
-@media (max-width: 768px) {
-  .carousel-viewport {
-    min-height: 600px;
-    max-width: 100%;
-    border-width: 8px;
-  }
-}
-
-.carousel-track {
+.shot-track {
   display: flex;
   height: 100%;
   width: 100%;
-  transition: transform 600ms cubic-bezier(0.34, 1.56, 0.64, 1);
-  will-change: transform;
+  /* Compositor-only: `transform` on a flex row, never `left` or a width
+     animation, so a slide change costs no layout. */
+  transition: transform 620ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.carousel-slide {
-  min-width: 100%;
+.shot-slide {
+  position: relative;
+  flex: 0 0 100%;
   height: 100%;
-  display: flex;
-  align-items: stretch;
-  justify-content: center;
-  padding: 1.5rem 0;
-  overflow-y: auto;
 }
 
-.screenshot-image {
-  width: 100%;
-  height: auto;
+/* `contain`, not `cover`. These are UI screenshots: cropping one to fill the
+   box cuts off the toolbar or the settings panel, which is the part worth
+   looking at. Any letterboxing lands on --paper-sunk and reads as matting. */
+.shot-image {
   object-fit: contain;
-  object-position: top center;
+  object-position: center;
 }
 
-.carousel-nav {
+.shot-nav {
   position: absolute;
   top: 50%;
-  transform: translateY(-50%);
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.75rem;
+  height: 2.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: currentColor;
+  border-radius: 999px;
+  /* Tinted from the theme rather than hardcoded white-on-transparent, which
+     vanished against a light screenshot in light mode. */
+  background: var(--paper-glass);
+  backdrop-filter: blur(14px) saturate(150%);
+  border: 1px solid var(--rule-strong);
+  color: var(--ink);
+  box-shadow: var(--shadow-panel);
   cursor: pointer;
-  transition: all 300ms ease-spring;
-  z-index: 10;
+  opacity: 0;
+  transition:
+    opacity 260ms var(--ease-editorial),
+    transform 260ms var(--ease-spring),
+    background-color 260ms linear;
+  z-index: 2;
 }
 
-.carousel-nav:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: translateY(-50%) scale(1.1);
+.shot-nav-prev {
+  left: 0.75rem;
+  transform: translate(-0.25rem, -50%);
 }
 
-.carousel-nav-prev {
-  left: 1rem;
+.shot-nav-next {
+  right: 0.75rem;
+  transform: translate(0.25rem, -50%);
 }
 
-.carousel-nav-next {
-  right: 1rem;
-}
-
-@media (max-width: 768px) {
-  .carousel-viewport {
-    max-width: 100%;
-  }
-
-  .carousel-nav {
-    width: 2rem;
-    height: 2rem;
-  }
-}
-
-/* Thumbnail indicators */
-.carousel-indicators {
-  display: flex;
-  gap: 0.75rem;
-  overflow-x: auto;
-  padding: 0 0.5rem;
-  scroll-behavior: smooth;
-}
-
-.carousel-indicator {
-  flex: 0 0 auto;
-  width: 60px;
-  height: 120px;
-  border-radius: 0.5rem;
-  border: 2px solid transparent;
-  padding: 0;
-  cursor: pointer;
-  overflow: hidden;
-  background: var(--paper-surface);
-  transition: all 200ms ease;
-  opacity: 0.6;
-}
-
-.carousel-indicator:hover {
-  opacity: 0.8;
-}
-
-.carousel-indicator.active {
-  border-color: var(--accent);
+/* Revealed on hover on a mouse, always visible on touch — where there is no
+   hover to reveal them with, and an invisible control is no control. */
+.shot:hover .shot-nav,
+.shot-nav:focus-visible {
   opacity: 1;
+  transform: translate(0, -50%);
 }
 
-.indicator-thumb {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+@media (hover: none) {
+  .shot-nav {
+    opacity: 1;
+    transform: translate(0, -50%);
+  }
 }
 
-.carousel-counter {
+.shot-nav:hover {
+  background: var(--paper-raised);
+}
+
+.shot-nav:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ── Controls under the frame ─────────────────────────────────────────────
+   Outside `.shot-viewport` so they sit below the device chrome rather than
+   floating over the artwork. */
+
+.shot-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.125rem 1rem 0;
+}
+
+.shot-pills {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* A 0.5rem dot that stretches to a 1.5rem capsule when active. The whole
+   control is 44px tall via padding so it clears the touch-target minimum
+   while the visible mark stays small. */
+.shot-pill {
+  width: 0.5rem;
+  height: 0.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--rule-strong);
+  cursor: pointer;
+  transition:
+    width 320ms var(--ease-spring),
+    background-color 320ms linear;
+}
+
+.shot-pill[data-active] {
+  width: 1.5rem;
+  background: var(--accent);
+}
+
+.shot-pill:hover:not([data-active]) {
+  background: var(--ink-faint);
+}
+
+.shot-pill:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.shot-caption {
+  /* Two lines of reserved height. Captions differ in length, and without a
+     floor the content below jumps every time the slide changes. */
+  min-height: 2.5rem;
+  max-width: 34ch;
   text-align: center;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
   color: var(--ink-muted);
-  font-family: var(--font-mono);
-  font-weight: 500;
+  text-wrap: balance;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shot-track,
+  .shot-pill,
+  .shot-nav {
+    transition-duration: 0.01ms;
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -2685,4 +2729,11 @@ a {
     font-size: 0.75em;
     color: #555;
   }
+}
+
+/* The frame is a block in the gallery's column flow, so its own shadow and
+   radius apply while the controls below stay outside the chrome. */
+.shot-frame {
+  border-radius: 1.25rem;
+  box-shadow: var(--shadow-panel);
 }

@@ -47,9 +47,14 @@ export default function Work() {
         className="text-lead reveal-item mt-band max-w-measure text-ink-muted"
         style={{ "--i": 1 } as React.CSSProperties}
       >
-        Production-grade mobile and web applications built from concept to App
-        Store. Each case study covers the technical challenges, architecture
-        decisions, and lessons learned shipping real products used by thousands.
+        {/* "Concept to App Store" described the work while there was one
+            project and it was an app. Space Transfers is a web platform, so
+            the line now covers both without claiming a store listing for
+            something that has none — and without the unverifiable "used by
+            thousands" that was here before. */}
+        Products taken from an unclear problem to something running, on the
+        App Store and on the web. Each case study covers the architecture, the
+        parts that turned out to be hard, and what I would do differently.
       </p>
 
       <div className="mt-section">

@@ -23,33 +23,6 @@ import type { Project } from "@/app/lib/content";
  */
 
 /**
- * Screenshots for the Looking to Hire app carousel.
- * Each screenshot shows a different feature of the application.
- */
-const SCREENSHOTS: readonly { src: string; alt: string }[] = [
-  {
-    src: "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/e2/d5/2e/e2d52eee-74e4-5e2c-03b0-bef31f9bee20/Simulator_Screenshot_-_iPhone_16e_-_2025-12-03_at_11.41.04.png/600x1300bb.png",
-    alt: "Looking to Hire - Home screen with personalized job recommendations",
-  },
-  {
-    src: "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/d8/d3/44/d8d344cb-65df-7cb9-3d06-417393f98081/Simulator_Screenshot_-_iPhone_16e_-_2025-12-03_at_11.41.22.png/600x1300bb.png",
-    alt: "Looking to Hire - Job details and apply interface",
-  },
-  {
-    src: "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/a1/6e/45/a16e45dd-eeb9-c0e3-66f2-f7a3aae59c33/Simulator_Screenshot_-_iPhone_16e_-_2025-12-03_at_11.41.11.png/600x1300bb.png",
-    alt: "Looking to Hire - Application tracking dashboard",
-  },
-  {
-    src: "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/62/d7/90/62d7905c-ac7a-5912-4a3f-46090d4b3f8b/Simulator_Screenshot_-_iPhone_16e_-_2025-12-03_at_11.44.03.png/600x1300bb.png",
-    alt: "Looking to Hire - In-app messaging with employers",
-  },
-  {
-    src: "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/91/e1/ba/91e1ba8f-c2cc-8a80-0203-f1547abba378/Simulator_Screenshot_-_iPhone_16e_-_2025-12-04_at_08.54.40.png/600x1300bb.png",
-    alt: "Looking to Hire - User profile and resume management",
-  },
-];
-
-/**
  * Each project's colour, from the bright fill set.
  *
  * Assigned by position rather than stored on the project, because it is a
@@ -77,6 +50,11 @@ export default function ProjectShowcase({
      says which platform this is before a single word is read. */
   const kind = project.category === "Mobile" ? "phone" : "browser";
   const flipped = index % 2 === 1;
+  /* A gallery replaces the single plate when the project carries one. Read off
+     the project, never a constant here — see the note on `screenshots` in
+     content.ts for why that distinction cost us a bug. */
+  const shots = project.screenshots ?? [];
+  const hasGallery = shots.length > 0;
 
   return (
     <article
@@ -106,20 +84,59 @@ export default function ProjectShowcase({
           <div
             data-parallax
             style={{ "--parallax": 2 } as React.CSSProperties}
-            className="relative z-[1]"
+            /*
+             * z-[1] normally, lifted to z-20 for a gallery.
+             *
+             * This element is a stacking context, so a `z-10` on the gallery
+             * inside it cannot climb out — it only orders siblings within this
+             * box. The card's stretched title link paints an invisible hit area
+             * over the whole composition at z-index 1; at equal z-index the
+             * later element in the DOM wins, and that is the content column.
+             * The result was a gallery whose arrows and pills swallowed every
+             * click into the case-study link instead.
+             *
+             * Only lifted when there is something interactive to protect. A
+             * static plate SHOULD stay inside the stretched link, so that
+             * clicking the artwork opens the case study.
+             */
+            className={`relative ${hasGallery ? "z-20" : "z-[1]"}`}
           >
-            {kind === "phone" ? (
-              /* Mobile projects: show carousel with screenshots */
-              <ScreenshotCarousel
-                screenshots={SCREENSHOTS}
-                projectName={project.title}
-              />
+            {/*
+              One composition for both cases: chrome on the outside, contents
+              on the inside. The gallery used to bypass <DeviceFrame> and draw
+              its own phone shell in CSS, which meant a second, divergent
+              definition of what a phone looks like — and no way at all to put
+              a gallery in browser chrome.
+
+              <Tilt> is deliberately skipped when there is a gallery. It rotates
+              the frame under the pointer, and fighting a moving target to hit a
+              2.5rem arrow is a worse interaction than a still one.
+            */}
+            {hasGallery ? (
+              /* The gallery brings its own frame, because the controls have to
+                 sit OUTSIDE the chrome and only it knows where that boundary
+                 is. No <Tilt> here: rotating the frame under the pointer makes
+                 a 2.75rem arrow a moving target. */
+              <div className={kind === "phone" ? "mx-auto max-w-[19rem]" : ""}>
+                <ScreenshotCarousel
+                  screenshots={shots}
+                  projectName={project.title}
+                  frame={kind}
+                  label={kind === "browser" ? (project.href ?? project.title) : undefined}
+                  /* Phone shots are portrait, browser shots landscape. One
+                     ratio for both letterboxes whichever it was not chosen
+                     for. Matched to the real files: 600×1300 and 2880×1630. */
+                  aspect={kind === "phone" ? "9 / 19.5" : "16 / 9"}
+                />
+              </div>
             ) : (
-              /* Browser projects: show device frame */
-              <Tilt max={4}>
+              <Tilt max={4} className={kind === "phone" ? "mx-auto max-w-[19rem]" : ""}>
                 <div className="showcase-frame rounded-[inherit]">
-                  <DeviceFrame label={project.href ?? project.title}>
-                    <div className="aspect-[16/10]">
+                  <DeviceFrame
+                    kind={kind}
+                    label={kind === "browser" ? (project.href ?? project.title) : undefined}
+                  >
+                    <div className={kind === "phone" ? "aspect-[9/16]" : "aspect-[16/10]"}>
                       <Plate
                         project={project}
                         tone={tone}
