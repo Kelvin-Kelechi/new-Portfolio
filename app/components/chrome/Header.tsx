@@ -14,7 +14,9 @@ export default function Header({
   onOpenAssistant,
 }: {
   onOpenPalette: () => void;
-  onOpenAssistant: () => void;
+  /** Omitted when the assistant has no key behind it — the button is then not
+      rendered at all rather than rendered into an error. */
+  onOpenAssistant?: () => void;
 }) {
   const pathname = usePathname();
   const onHome = pathname === "/";
@@ -286,6 +288,7 @@ export default function Header({
                 against the neutral menu icon beside it. The `surface` pill
                 returns at `sm`, where the button also gains its "Ask" label and
                 is a labelled control rather than a bare glyph. */}
+            {onOpenAssistant && (
             <button
               type="button"
               onClick={onOpenAssistant}
@@ -306,6 +309,7 @@ export default function Header({
               </span>
               <span className="hidden pr-0.5 sm:inline">Ask</span>
             </button>
+            )}
 
             <ThemeToggle className="surface tap-target group hidden h-9 w-9 items-center justify-center rounded-full text-ink-muted transition-colors duration-300 hover:text-accent sm:flex" />
 

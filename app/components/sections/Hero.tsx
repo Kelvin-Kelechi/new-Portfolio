@@ -247,7 +247,7 @@ export default function Hero() {
         </div>
 
         {/* The scannable facts. A recruiter reads this row before any prose. */}
-        <dl className="rule-t relative z-10 order-5 mt-12 grid grid-cols-2 gap-x-gutter gap-y-8 pt-row sm:mt-section sm:gap-y-band md:grid-cols-4">
+        <dl className="rule-t relative z-10 order-5 mt-12 grid grid-cols-2 gap-x-gutter gap-y-8 pt-row sm:mt-section sm:gap-y-band md:grid-cols-3">
           <Stat
             i={7}
             label="Years shipping"
@@ -255,23 +255,18 @@ export default function Hero() {
           />
           <Stat
             i={8}
-            label="Projects delivered"
-            value={<Counter value={site.projectsShipped} suffix="+" />}
-          />
-          <Stat
-            i={9}
             label="Industries"
             value={site.industries.join(" · ")}
             small
           />
-          <Stat i={10} label="Timezone" value={site.timezone} small />
+          <Stat i={9} label="Timezone" value={site.timezone} small />
         </dl>
       </div>
 
       <a
         href="#ethos"
         className="rise label shell group relative z-10 mt-band flex items-center gap-2 text-ink-faint transition-colors hover:text-accent"
-        style={{ "--i": 11 } as React.CSSProperties}
+        style={{ "--i": 10 } as React.CSSProperties}
       >
         <Icon
           name="arrow-down"

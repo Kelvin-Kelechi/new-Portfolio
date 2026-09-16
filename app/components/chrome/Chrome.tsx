@@ -1,12 +1,30 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import Header from "@/app/components/chrome/Header";
-import CommandPalette from "@/app/components/chrome/CommandPalette";
-import ShortcutsSheet from "@/app/components/chrome/ShortcutsSheet";
-import Assistant from "@/app/components/chrome/Assistant";
 import Cursor from "@/app/components/chrome/Cursor";
 import ScrollProgress from "@/app/components/chrome/ScrollProgress";
 import { useTheme } from "@/app/lib/prefs";
+
+/*
+ * None of these three render until an overlay is actually opened — a
+ * keystroke or a click, never the initial paint — so their code has no
+ * business in the bundle every visitor downloads on arrival. A static import
+ * here previously pulled all three into Chrome's own chunk regardless of
+ * whether anyone ever pressed ⌘K; `next/dynamic` defers the fetch to the
+ * moment `open()` first sets `overlay` to that value. `ssr: false` because an
+ * overlay closed on load has nothing to contribute to the server-rendered
+ * HTML anyway.
+ */
+const CommandPalette = dynamic(() => import("@/app/components/chrome/CommandPalette"), {
+  ssr: false,
+});
+const ShortcutsSheet = dynamic(() => import("@/app/components/chrome/ShortcutsSheet"), {
+  ssr: false,
+});
+const Assistant = dynamic(() => import("@/app/components/chrome/Assistant"), {
+  ssr: false,
+});
 
 export type Overlay = "palette" | "shortcuts" | "assistant" | null;
 
@@ -21,7 +39,16 @@ export type Overlay = "palette" | "shortcuts" | "assistant" | null;
  * that knows what is currently open can decide correctly whether a keystroke
  * is a shortcut or ordinary typing.
  */
-export default function Chrome() {
+export default function Chrome({
+  /**
+   * Whether the assistant endpoint has a key behind it, resolved on the server
+   * in layout.tsx. Defaults to false so any caller that forgets to pass it
+   * fails toward "hidden" rather than toward a button that errors.
+   */
+  assistantEnabled = false,
+}: {
+  assistantEnabled?: boolean;
+}) {
   const [overlay, setOverlay] = useState<Overlay>(null);
   const { toggle: toggleTheme } = useTheme();
   /** Tracks the `g` prefix for two-key navigation chords. */
@@ -133,10 +160,14 @@ export default function Chrome() {
       <Cursor />
       <Header
         onOpenPalette={() => open("palette")}
-        onOpenAssistant={() => open("assistant")}
+        onOpenAssistant={assistantEnabled ? () => open("assistant") : undefined}
       />
       {overlay === "palette" && (
-        <CommandPalette onClose={close} onOpen={open} />
+        <CommandPalette
+          onClose={close}
+          onOpen={open}
+          assistantEnabled={assistantEnabled}
+        />
       )}
       {overlay === "shortcuts" && <ShortcutsSheet onClose={close} />}
       {overlay === "assistant" && <Assistant onClose={close} />}

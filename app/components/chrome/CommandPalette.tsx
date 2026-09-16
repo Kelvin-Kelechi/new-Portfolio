@@ -24,9 +24,15 @@ import type { Overlay } from "@/app/components/chrome/Chrome";
 export default function CommandPalette({
   onClose,
   onOpen,
+  assistantEnabled = false,
 }: {
   onClose: () => void;
   onOpen: (overlay: Exclude<Overlay, null>) => void;
+  /** Drops the assistant row when there is no key behind the endpoint. The
+      index is built at module scope from static content, so the filter has to
+      happen here rather than in search.ts — which has no access to server
+      environment and would leak the answer into the client bundle if it did. */
+  assistantEnabled?: boolean;
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -39,7 +45,12 @@ export default function CommandPalette({
   const { toggle: toggleMotion } = useMotion();
   const { toggle: toggleReading } = useReading();
 
-  const results = useMemo(() => searchSite(query), [query]);
+  const results = useMemo(() => {
+    const found = searchSite(query);
+    return assistantEnabled
+      ? found
+      : found.filter((item) => item.action !== "assistant");
+  }, [query, assistantEnabled]);
 
   /*
    * Grouped for display, but `results` stays the flat keyboard order — the two

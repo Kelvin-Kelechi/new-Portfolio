@@ -171,8 +171,6 @@ export const site = {
   availability: "Available for remote work",
   /** Derived from the five-year claim already in the about copy. */
   yearsExperience: 5,
-  /** TODO(slot): keep honest — used in the hero stat row. */
-  projectsShipped: 20,
   /** Domains, not job titles. What a recruiter scans for first. */
   industries: ["Fintech", "Healthcare", "E-commerce"],
   specialties: ["Product engineering", "Design systems", "Performance", "Offline-first mobile"],
@@ -398,6 +396,85 @@ export const projects: readonly Project[] = [
           "Three roles needed the same order to be current. A printer accepting a job while the customer still saw it as unassigned produces support tickets and duplicate work.",
         resolution:
           "State transitions publish through dedicated sync and notification services, so customer, admin and printer views converge on the same order state without any of them polling.",
+      },
+    ],
+    metrics: [],
+  },
+  {
+    slug: "wayabank",
+    title: "Wayabank",
+    year: "2023",
+    role: "Frontend / Mobile Engineer",
+    duration: "6 months",
+    category: "Mobile",
+    summary:
+      "Digital banking app for sending, receiving and withdrawing money, and paying airtime, data and utility bills",
+    detail:
+      "A mobile banking app licensed by the CBN. Users send and receive money with just a phone number or email, withdraw to other Nigerian banks, and pay bills — airtime, data, TV and betting — without leaving the app. I built the iOS and Android client.",
+    stack: ["React Native", "TypeScript", "Redux", "REST API", "Biometric Auth", "Push Notifications"],
+    href: "https://apps.apple.com/ng/app/wayabank/id1658552439",
+    repo: null,
+    image: {
+      src: "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/f5/80/19/f5801988-63cb-d2cf-987a-659a03e98cc9/a5269467-8cf4-43dc-bc6a-8041276f8390_a.jpeg/600x1300bb.png",
+      alt: "Wayabank — digital banking splash screen: send and receive money with just a phone number or email",
+    },
+    /* Straight from the App Store listing, in upload order — the same three
+       shots a recruiter sees if they follow the link. The listing runs four
+       files (a, b, c, e); c and e render identically, so only one is kept. */
+    screenshots: [
+      {
+        src: "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/f5/80/19/f5801988-63cb-d2cf-987a-659a03e98cc9/a5269467-8cf4-43dc-bc6a-8041276f8390_a.jpeg/600x1300bb.png",
+        alt: "Wayabank — digital banking splash screen: send and receive money with just a phone number or email",
+      },
+      {
+        src: "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/da/fc/9b/dafc9b89-c3b0-0729-0c93-055c56906d4e/e2340534-7c04-4ba2-9356-08de8cfbad0d_c_copy.jpeg/600x1300bb.png",
+        alt: "Wayabank — payments dashboard (fund, transfer, invoice, airtime, data, TV, betting) with the transfer-funds sheet open",
+      },
+      {
+        src: "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/ff/ed/35/ffed3516-36f7-5da9-7e62-29024fa1276d/3f6b97b7-5f48-454e-a63e-10daa6755d85_b.jpeg/600x1300bb.png",
+        alt: "Wayabank — unique profile QR code for scan-to-pay transfers",
+      },
+    ],
+    context:
+      "A CBN-licensed digital bank needed a mobile client that could carry real money movement — transfers, withdrawals to other banks, and bill payment — without the trust and performance problems that sink most fintech apps: a stuck spinner on a transfer, a balance that does not match what just happened, a biometric prompt that fails silently.",
+    sections: [
+      {
+        heading: "Product surface",
+        body: "Send and receive money by phone number, email or a generated QR code. Withdraw to any other Nigerian bank. Pay recurring bills — airtime, data, TV subscriptions, betting wallets — from the same payments grid, so a user never has to leave the app for the transactions that bring them back weekly rather than once.",
+      },
+      {
+        heading: "Client architecture",
+        body: "React Native across iOS and Android from one codebase, with the platform-specific pieces — biometric prompts, push notifications, deep links into a transfer confirmation — kept behind native modules rather than JS shims. State for balances and transaction history lives in Redux, normalized so a transfer updates one record rather than requiring three screens to independently refetch.",
+      },
+      {
+        heading: "Money screens are different",
+        body: "A social app can retry a failed request invisibly; a banking app cannot, because the user needs to know whether their money moved. Every transfer, withdrawal and bill payment resolves to an explicit success, failure or pending state before the sheet closes, and pending states persist across app restarts instead of silently resolving to a guess.",
+      },
+    ],
+    architecture: [
+      "React Native · single codebase, native modules for biometrics and push",
+      "Redux · normalized balance and transaction state",
+      "REST API · transfers, withdrawals, bill payments, KYC",
+      "Biometric auth · Face ID / fingerprint gate on money-moving actions",
+    ],
+    challenges: [
+      {
+        problem:
+          "A transfer or bill payment that appears to hang is worse than one that fails outright — the user does not know whether to retry and risk a double charge.",
+        resolution:
+          "Every money-moving action carries an idempotency key and an explicit pending state in the UI, so a slow network shows 'confirming' rather than a spinner with no ceiling, and a retry after a dropped connection cannot double-submit.",
+      },
+      {
+        problem:
+          "Balances and transaction history needed to stay correct across a fund, a transfer and a bill payment happening from different screens in the same session.",
+        resolution:
+          "Centralised the account state in Redux rather than letting each screen hold its own copy, so a transaction anywhere in the app invalidates one source of truth instead of requiring every screen that shows a balance to know to refetch.",
+      },
+      {
+        problem:
+          "Biometric authentication has to gate every money-moving action without becoming friction on the screens that do not need it.",
+        resolution:
+          "Scoped the Face ID / fingerprint prompt to the specific actions that move money or expose account details, with a graceful PIN fallback when biometrics are unavailable or fail, rather than gating the whole app behind one prompt at launch.",
       },
     ],
     metrics: [],

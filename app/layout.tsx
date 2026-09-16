@@ -147,7 +147,17 @@ export default function RootLayout({
           Skip to content
         </a>
         <div className="grain" aria-hidden="true" />
-        <Chrome />
+        {/*
+          The assistant advertises itself only when it can actually answer.
+
+          This is a server component, so the check happens where the secret
+          already lives and only a boolean crosses to the client — the key
+          itself never enters the bundle. An unconfigured deployment renders no
+          Ask button and no palette row for it, which is the honest failure: a
+          feature that is absent reads as a site that does not have one, where
+          a feature that errors reads as a site that is broken.
+        */}
+        <Chrome assistantEnabled={Boolean(process.env.GEMINI_API_KEY)} />
         {children}
       </body>
     </html>

@@ -31,6 +31,7 @@ export default function ScreenshotCarousel({
   frame = "phone",
   label,
   aspect = "9 / 19.5",
+  priority = false,
 }: {
   screenshots: readonly Screenshot[];
   projectName: string;
@@ -40,6 +41,15 @@ export default function ScreenshotCarousel({
   label?: string;
   /** CSS aspect-ratio for the viewport. Match the source files. */
   aspect?: string;
+  /**
+   * Whether this carousel sits above the fold and its first slide is worth
+   * preloading. Every project in the Work section renders one of these, and
+   * that section is always below the hero — defaulting to `false` keeps a
+   * three-project (soon more) index from preloading three off-screen images
+   * on every visit. Pass `true` only for a carousel actually in the initial
+   * viewport.
+   */
+  priority?: boolean;
 }) {
   const [current, setCurrent] = useState(0);
   /* Autoplay stops permanently at the first deliberate input. Resuming it
@@ -108,9 +118,11 @@ export default function ScreenshotCarousel({
                 alt={shot.alt}
                 fill
                 sizes="(max-width: 1024px) 92vw, 46vw"
-                /* Only the first slide is worth preloading; the rest are
-                   behind a click on every viewport. */
-                priority={index === 0}
+                /* Only the first slide of an above-the-fold carousel is worth
+                   preloading; the rest are behind a click on every viewport.
+                   next/image already lazy-loads by default when priority is
+                   false, so there is nothing further to set here. */
+                priority={priority && index === 0}
                 className="shot-image"
               />
             </div>
